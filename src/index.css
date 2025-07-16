@@ -1,7 +1,98 @@
+:root {
+    --primary: rgb(35, 35, 35); 
+    --secondary: rgb(22, 22, 22);
+    --tertiary: rgb(39,39,39);
+    --sub_tertiary: rgb(50, 50, 50);
+    --subtle: rgb(128, 128, 128);
+    --text: white;
+}
+:root.light {
+    --primary: rgb(225, 225, 225);
+    --secondary: rgb(190, 190, 190);
+    --tertiary: rgb(155, 155, 155);
+    --sub_tertiary: rgb(180, 180, 180);
+    --subtle: rgb(3,3,3);
+    --text: black;
+}
+
+html {
+    height: 100%;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
     Arial, sans-serif;
-  margin: auto;
-  max-width: 38rem;
-  padding: 2rem;
+    margin: auto;
+    color: var(--text);
+    background-color: var(--primary);
+}
+
+.main {
+    display: grid;
+    margin: auto;
+    grid-template-areas: 
+        'stashList stashList display display display'
+        'stashList stashList display display display';
+    grid-template-columns: 0.25fr auto auto auto auto;
+    border-radius: 15px;
+    width: 100%;
+    height: 100vh;
+}
+
+.stashList {
+    display: block;
+    position: relative;
+    grid-area: stashList;
+    background-color: var(--secondary);
+    border-radius: 10px;
+    max-width: 400px;
+}
+.stashList h2 {
+    text-align: center;
+}
+.stashList .stash {
+    display: block;
+    margin: auto;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+}
+.stashList .stash:hover, .stashList.selected {
+    background-color: var(--tertiary);
+    cursor: pointer;
+}
+.stashList .stash * { 
+    display: block;
+    margin: auto;
+}
+
+.pageDisplay {
+    display: block;
+    position: relative;
+    grid-area: display;
+}
+
+.mainTitle {
+    text-align: center;
+}
+
+.button {
+    display: block;
+    margin: auto;
+    border-radius: 8px;
+    width: fit-content;
+    background-color: var(--tertiary);
+    padding: 4px 10px;
+    margin-bottom: 5px;
+}
+.button:hover {
+    background-color: var(--sub_tertiary);
+    cursor: pointer;
+}
+.button.inline {
+    display: inline-block;
+}
+
+hr {
+    border: 1px solid var(--subtle);
 }
