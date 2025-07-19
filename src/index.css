@@ -3,7 +3,7 @@
     --secondary: rgb(22, 22, 22);
     --tertiary: rgb(39,39,39);
     --sub_tertiary: rgb(50, 50, 50);
-    --subtle: rgb(128, 128, 128);
+    --subtle: rgb(65, 65, 65);
     --text: white;
 }
 :root.light {
@@ -11,7 +11,7 @@
     --secondary: rgb(190, 190, 190);
     --tertiary: rgb(155, 155, 155);
     --sub_tertiary: rgb(180, 180, 180);
-    --subtle: rgb(3,3,3);
+    --subtle: rgb(120, 120, 120);
     --text: black;
 }
 
@@ -33,7 +33,7 @@ body {
     grid-template-areas: 
         'stashList stashList display display display'
         'stashList stashList display display display';
-    grid-template-columns: 0.25fr auto auto auto auto;
+    grid-template-columns: 0.2fr 0.2fr 0.25fr 0.25fr 0.25fr;
     border-radius: 15px;
     width: 100%;
     height: 100vh;
@@ -45,7 +45,7 @@ body {
     grid-area: stashList;
     background-color: var(--secondary);
     border-radius: 10px;
-    max-width: 400px;
+    /* max-width: 400px; */
 }
 .stashList h2 {
     text-align: center;
@@ -57,9 +57,12 @@ body {
     border-radius: 8px;
     margin-bottom: 5px;
 }
-.stashList .stash:hover, .stashList.selected {
+.stashList .stash:hover {
     background-color: var(--tertiary);
     cursor: pointer;
+}
+.stashList .stash.selected {
+    background-color: var(--sub_tertiary);
 }
 .stashList .stash * { 
     display: block;
@@ -95,4 +98,12 @@ body {
 
 hr {
     border: 1px solid var(--subtle);
+}
+
+.stashDisplay {
+    margin-left: 15px;
+}
+
+*.hidden {
+    display: none;
 }
