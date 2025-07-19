@@ -51,7 +51,7 @@ app.on('window-all-closed', () => {
     }
 });
 
-createRequiredFolders(app.getAppPath(), ["data/songs", "data/songs.json"]);
+createRequiredFolders(app.getAppPath(), ["data/songs", "data/songs.json", "data/stashes.json"]);
 
 /**
  * Get all stashes, including the master stash.

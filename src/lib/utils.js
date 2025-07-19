@@ -11,7 +11,7 @@ const path = require("node:path");
 async function readAndParseJson(filepath, defaultValue = {}) {
     if (!fs.existsSync(filepath)) return defaultValue;
 
-    const content = await fs.promises.readFile(filepath);
+    const content = await fs.promises.readFile(filepath, "utf-8");
 
     try {
         return JSON.parse(content);

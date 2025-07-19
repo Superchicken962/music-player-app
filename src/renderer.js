@@ -43,9 +43,20 @@ async function loadStash(stash, el) {
 
     // TODO: Add loading indicator.
 
-    const songs = await window.electronAPI.getSongs();
-    console.log(songs);
+    const songsData = await window.electronAPI.getSongs();
+    const songs = Object.values(songsData).map(song => Song.deserialize(song));
 
     title.textContent = stash.name;
     desc.textContent = stash.description;
+
+    songsEl.innerHTML = "";
+
+    if (songs.length === 0) {
+        // TODO: Show custom message.
+        return;
+    }
+
+    for (const song of songs) {
+        // TODO: Show each song.
+    }
 }
