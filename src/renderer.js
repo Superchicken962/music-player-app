@@ -10,7 +10,8 @@ async function updateStashList() {
 
         el.innerHTML = `
             <h3>${stash.name ?? "Unknown"}</h3>
-            <p>17 Songs • 1h 39m</p>
+            <!-- <p>17 Songs • 1h 39m</p> -->
+            <p>${stash.songs.length} Song${stash.songs.length === 1 ? "" : "s"} • N/A</p>
         `;
 
         el.addEventListener("click", () => {
@@ -26,6 +27,26 @@ function deselectAllStashes() {
     for (const stash of document.querySelectorAll(".stashList .stashes .stash")) {
         stash.classList.remove("selected");
     }
+}
+
+/**
+ * Map song ids to the objects.
+ * 
+ * @param { Stash } stash - Stash with song ids.
+ * @param { Song[] } allSongs - Array of all songs.
+ * @returns { Song[] }
+ */
+function mapSongsToStash(stash, allSongs) {
+    const songs = [];
+
+    for (const songId of stash.songs) {
+        const find = allSongs.find(s => s.id === songId);
+        if (!find) continue;
+
+        songs.push(find);
+    }
+
+    return songs;
 }
 
 async function loadStash(stash, el) {
@@ -44,19 +65,29 @@ async function loadStash(stash, el) {
     // TODO: Add loading indicator.
 
     const songsData = await window.electronAPI.getSongs();
-    const songs = Object.values(songsData).map(song => Song.deserialize(song));
+    const allSongs = Object.values(songsData).map(song => Song.deserialize(song));
 
     title.textContent = stash.name;
     desc.textContent = stash.description;
 
     songsEl.innerHTML = "";
 
-    if (songs.length === 0) {
+    // Map each song id in the stash to the correct song to get info.
+    const stashSongs = mapSongsToStash(stash, allSongs);
+
+    if (stashSongs.length === 0) {
         // TODO: Show custom message.
         return;
     }
 
-    for (const song of songs) {
-        // TODO: Show each song.
+    for (const song of stashSongs) {
+        const el = document.createElement("div");
+        el.className = "song";
+
+        el.innerHTML = `
+            ${song.artist} - ${song.name}
+        `;
+
+        songsEl.appendChild(el);
     }
 }

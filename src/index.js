@@ -60,12 +60,13 @@ createRequiredFolders(app.getAppPath(), ["data/songs", "data/songs.json", "data/
  */
 async function getStashes() {
     const stashes = await readAndParseJson(path.join(app.getAppPath(), "data/stashes.json"), []);
+    const songs = await readAndParseJson(path.join(app.getAppPath(), "data/songs.json"), {});
 
     // Add "master" stash to start.
     stashes.unshift({
         name: "Master Stash",
         description: "The main stash in which all of your downloaded and imported songs will be stored!",
-        songs: []
+        songs: Object.keys(songs)
     });
 
     return stashes;
