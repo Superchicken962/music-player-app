@@ -5,6 +5,8 @@
     --sub_tertiary: rgb(50, 50, 50);
     --subtle: rgb(65, 65, 65);
     --text: white;
+    --text_hint: grey;
+    --active_song: rgb(0, 180, 0);
 }
 :root.light {
     --primary: rgb(225, 225, 225);
@@ -13,6 +15,7 @@
     --sub_tertiary: rgb(180, 180, 180);
     --subtle: rgb(120, 120, 120);
     --text: black;
+    --text_hint: rgb(56, 56, 56);
 }
 
 html {
@@ -106,4 +109,29 @@ hr {
 
 *.hidden {
     display: none;
+}
+
+.songs .song {
+    display: block;
+    margin: auto;
+    padding: 4px 10px;
+    border-radius: 10px;
+}
+.songs .song:hover {
+    background-color: var(--sub_tertiary);
+    cursor: pointer;
+}
+.songs .song .artist {
+    display: block;
+    margin: auto;
+    color: var(--text_hint);
+    font-size: 14px;
+}
+.songs .song p {
+    display: block;
+    margin: auto;
+}
+.songs .song.playing {
+    color: var(--active_song);
+    font-weight: 600;
 }

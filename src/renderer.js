@@ -1,3 +1,5 @@
+const audio = new Audio();
+
 async function updateStashList() {
     const stashes = await window.electronAPI.getStashes();
 
@@ -26,6 +28,12 @@ updateStashList();
 function deselectAllStashes() {
     for (const stash of document.querySelectorAll(".stashList .stashes .stash")) {
         stash.classList.remove("selected");
+    }
+}
+
+function deselectPlayingSongs() {
+    for (const song of document.querySelectorAll(".song.playing")) {
+        song.classList.remove("playing");
     }
 }
 
@@ -80,14 +88,50 @@ async function loadStash(stash, el) {
         return;
     }
 
-    for (const song of stashSongs) {
+    stashSongs.forEach((song, i) => {
         const el = document.createElement("div");
         el.className = "song";
+        el.id = song.id;
+        el.role = "button";
+
+        // TODO: Check if this song is the one playing.
 
         el.innerHTML = `
-            ${song.artist} - ${song.name}
+            <p>
+                <span class="position">${i+1}</span>
+                <span class="name">${song.name}</span>
+                <span class="artist">${song.artist}</span>
+            </p>
         `;
 
+        el.addEventListener("dblclick", async() => {
+            const playing = await playSong(song);
+            if (!playing) {
+                // TODO: Display error on playing song.
+                return;
+            }
+
+            deselectPlayingSongs();
+            el.className = "song playing";
+        });
+
         songsEl.appendChild(el);
+    });
+}
+
+/**
+ * @param { Song } song 
+ * @return { Promise<Boolean> } is the song playing now?
+ */
+async function playSong(song) {
+    try {
+        audio.src = song.path;
+        await audio.play();
+    } catch (error) {
+        console.log(`Unable to play song '${song.name}'!`);
+        return false; 
     }
+
+    audio.volume = 0.5;
+    return true;
 }
