@@ -1,6 +1,7 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('node:path');
 const { readAndParseJson, createRequiredFolders } = require('./lib/utils');
+const fs = require("node:fs");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -32,6 +33,8 @@ const createWindow = () => {
 app.whenReady().then(() => {
     ipcMain.handle("data:getStashes", getStashes);
     ipcMain.handle("data:getSongs", getSongs);
+    ipcMain.handle("data:createStash", newStash);
+    ipcMain.handle("data:deleteStash", deleteStash);
 
     createWindow();
 
@@ -64,9 +67,11 @@ async function getStashes() {
 
     // Add "master" stash to start.
     stashes.unshift({
+        id: 0,
         name: "Master Stash",
         description: "The main stash in which all of your downloaded and imported songs will be stored!",
-        songs: Object.keys(songs)
+        songs: Object.keys(songs),
+        isMain: true
     });
 
     return stashes;
@@ -80,4 +85,25 @@ async function getStashes() {
 async function getSongs() {
     const songs = await readAndParseJson(path.join(app.getAppPath(), "data/songs.json"), {});
     return songs;
+}
+
+async function newStash(e, stash) {
+    const stashes = await readAndParseJson(path.join(app.getAppPath(), "data/stashes.json"), []);
+    stashes.push(stash);
+
+    return fs.promises.writeFile(path.join(app.getAppPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
+}
+
+async function deleteStash(e, id) {
+    const stashes = await readAndParseJson(path.join(app.getAppPath(), "data/stashes.json"), []);
+    const stashIndex = stashes.findIndex(s => s.id === id);
+
+    // If stash isn't found, return.
+    if (stashIndex === -1) {
+        return;
+    }
+
+    // Otherwise, remove the stash from the array and save.
+    stashes.splice(stashIndex, 1);
+    return fs.promises.writeFile(path.join(app.getAppPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
 }

@@ -44,5 +44,5 @@ async function createRequiredFolders(appPath, folders) {
 
 module.exports = {
     readAndParseJson,
-    createRequiredFolders
+    createRequiredFolders,
 };
