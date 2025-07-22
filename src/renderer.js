@@ -201,16 +201,23 @@ async function playSong(song) {
         return false; 
     }
 
-    audio.volume = 0.1;
+    const nameEl = document.querySelector(".audioPlayerBar .song .text .name");
+    const artistEl = document.querySelector(".audioPlayerBar .song .text .artist");
+
+    nameEl.textContent = song.name;
+    artistEl.textContent = song.artist;
+
+    audio.volume = localStorage.getItem("volume") ?? 0.05;
     return true;
 }
 
+initAudioFunctions(audio);
 
 /* Manage creating stashes */
 
 async function createStash() {
     const stashes = await window.electronAPI.getStashes();
-    const newStash = new Stash(stashes.length, `My ${stashes.length}th Stash`, "No description");
+    const newStash = new Stash(stashes.length, `My ${stashes.length}${getNumberSuffix(stashes.length)} Stash`, "No description");
 
     await window.electronAPI.newStash(newStash);
     updateStashList();

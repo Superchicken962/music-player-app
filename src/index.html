@@ -4,6 +4,7 @@
     <meta charset="UTF-8"/>
     <title>MusicStash</title>
     <link rel="stylesheet" href="index.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://unpkg.com/tippy.js@6.3.7/themes/light.css" rel="stylesheet">
     <link href="https://unpkg.com/tippy.js@6.3.7/themes/material.css" rel="stylesheet">
     <script src="https://unpkg.com/@popperjs/core@2"></script>
@@ -19,22 +20,7 @@
 
             <hr>
 
-            <div class="stashes">
-                <!-- <div class="stash selected">
-                    <h3>Master Stash</h3>
-                    <p>0 Songs • 0m</p>
-                </div> -->
-
-                <!-- <div class="stash">
-                    <h3>Stash Name</h3>
-                    <p>17 Songs • 1h 39m</p>
-                </div>
-
-                <div class="stash">
-                    <h3>Stash Name</h3>
-                    <p>11 Songs • 57m</p>
-                </div> -->
-            </div>
+            <div class="stashes"></div>
         </div>
 
         <div class="pageDisplay">
@@ -48,6 +34,35 @@
                 <p class="description"></p>
 
                 <div class="songs"></div>
+            </div>
+        </div>
+
+        <div class="audioPlayerBar">
+            <div class="volume">
+                <i class="fa fa-volume-down"></i>
+                <input type="range" min="0" max="20"/>
+                <i class="fa fa-volume-up"></i>
+            </div>
+
+            <div class="song">
+                <div class="image"></div>
+                <div class="text">
+                    <h3><span class="name"></span></h3>
+                    <h4><span class="artist"></span></h4>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <a class="shuffle"><i class="fa fa-shuffle"></i></a>
+                <a class="previous"><i class="fa fa-backward"></i></a>
+                <a class="play" data-state="paused"><i class="fa fa-play"></i></a>
+                <a class="next"><i class="fa fa-forward"></i></a>
+                <a class="shuffle"><i class="fa fa-repeat"></i></a>
+            </div>
+            
+            <div class="progress">
+                <span class="time"></span>
+                <input type="range" min="0" max="100" value="0"/>
             </div>
         </div>
     </div>
