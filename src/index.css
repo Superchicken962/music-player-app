@@ -143,37 +143,47 @@ hr {
 }
 
 .audioPlayerBar {
-    display: block;
+    display: grid;
+    margin: auto;
     position: fixed;
     left:0;right:0;
     bottom:0;
     background-color: var(--tertiary);
     box-shadow: 1px -2px 4px black;
     height: 80px;
+
+    grid-template-areas: 
+        'audioDetails audioControl audioControl volume'
+        'audioDetails audioProgress audioProgress volume';
+    grid-template-columns: 0.25fr 0.25fr 0.25fr 0.25fr;
+    border-radius: 15px;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
 }
 
-.audioPlayerBars .progress {
+.audioPlayerBar .progress {
     display: block;
     margin: auto;
-    top:50%;right:0;
-    bottom:0;left:0;
-    width: 50%;
+    width: 100%;
     text-align: center;
+    grid-area: audioProgress;
 }
 
 .audioPlayerBar .progress input[type="range"] {
-    display: inline-block;
+    display: block;
+    margin: auto;
     -webkit-appearance: none;
     appearance: none;
-    width: 100%;
+    width: 90%;
     outline: none;
-    height: 15px;
+    height: 10px;
     border-radius: 16px;
     overflow: hidden;
 }
 
 .audioPlayerBar .progress input[type="range"]::-webkit-slider-runnable-track {
-    height: 15px;
+    height: 10px;
     background: grey;
     border-radius: 15px;
 }
@@ -181,8 +191,8 @@ hr {
 .audioPlayerBar .progress input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    height: 15px;
-    width: 15px;
+    height: 10px;
+    width: 10px;
     background-color: rgb(0,100,250);
     border-radius: 50%;
     border: 2px solid rgb(0,100,250);
@@ -197,6 +207,7 @@ hr {
     display: block;
     margin: auto;
     text-align: center;
+    grid-area: audioControl;
 }
 
 .audioPlayerBar .controls a {
@@ -223,8 +234,7 @@ hr {
 .audioPlayerBar .song {
     display: block;
     margin: auto;
-    position: absolute;
-    left: 5px;
+    grid-area: audioDetails;
 }
 
 .audioPlayerBar .song .image {
@@ -233,12 +243,17 @@ hr {
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
-    width: 40px;
-    height: 40px;
-    margin-right: 15px;
+    width: 50px;
+    height: 50px;
+    vertical-align: middle;
 }
 
 .audioPlayerBar .song .text {
     display: inline-block;
     vertical-align: top;
+    min-width: 0.25fr;
+}
+.audioPlayerBar .song .artist {
+    color: var(--text_hint);
+    font-size: 14px;
 }

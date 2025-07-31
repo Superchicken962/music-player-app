@@ -1,11 +1,5 @@
 const audio = new Audio();
 
-const currentlyPlaying = { stashId: null, songId: null };
-
-const isCurrentlyPlaying = (stashId, songId) => {
-    return currentlyPlaying.stashId === stashId && currentlyPlaying.songId === songId;
-}
-
 async function updateStashList() {
     const stashes = await window.electronAPI.getStashes();
 
@@ -82,12 +76,6 @@ updateStashList();
 function deselectAllStashes() {
     for (const stash of document.querySelectorAll(".stashList .stashes .stash")) {
         stash.classList.remove("selected");
-    }
-}
-
-function deselectPlayingSongs() {
-    for (const song of document.querySelectorAll(".song.playing")) {
-        song.classList.remove("playing");
     }
 }
 
@@ -174,8 +162,10 @@ async function loadStash(stash, el) {
                 return;
             }
             
-            currentlyPlaying.songId = song.id;
-            currentlyPlaying.stashId = stash.id;
+            setPlayingSong(stash.id, song);
+
+            mainQueue.import(...stashSongs);
+            mainQueue.setPosition(song);
 
             el.className = "song playing";
         });
@@ -201,17 +191,11 @@ async function playSong(song) {
         return false; 
     }
 
-    const nameEl = document.querySelector(".audioPlayerBar .song .text .name");
-    const artistEl = document.querySelector(".audioPlayerBar .song .text .artist");
-
-    nameEl.textContent = song.name;
-    artistEl.textContent = song.artist;
-
     audio.volume = localStorage.getItem("volume") ?? 0.05;
     return true;
 }
 
-initAudioFunctions(audio);
+const audioOptions = initAudioFunctions(audio);
 
 /* Manage creating stashes */
 
@@ -227,3 +211,9 @@ async function createStash() {
 
 const createStashBtn = document.querySelector(".createStashBtn");
 createStashBtn.addEventListener("click", createStash);
+
+registerKeyBinds({
+    " ": () => {
+        audioOptions.togglePause();
+    }
+});
