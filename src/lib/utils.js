@@ -34,10 +34,11 @@ async function createRequiredFolders(appPath, folders) {
         if (!fs.existsSync(dir)) {
             // If "folder" is a file, write to file instead of creating directory.
             if (folder.includes(".")) {
-                return fs.promises.writeFile(dir, "", "utf-8");
+                fs.promises.writeFile(dir, "", "utf-8");
+                continue;
             }
 
-            return fs.promises.mkdir(dir, {recursive: true});
+            fs.promises.mkdir(dir, {recursive: true});
         }
     }
 }

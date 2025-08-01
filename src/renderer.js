@@ -1,5 +1,7 @@
 const audio = new Audio();
 
+const modal = new Modal("mainModal");
+
 async function updateStashList() {
     const stashes = await window.electronAPI.getStashes();
 
@@ -122,7 +124,19 @@ async function loadStash(stash, el) {
     const allSongs = Object.values(songsData).map(song => Song.deserialize(song));
 
     title.textContent = stash.name;
-    desc.textContent = stash.description;
+    desc.innerHTML = `
+        ${stash.description}<br><br>
+        <a class="button solid inline addSongBtn">${stash.isMain ? "Import Song" : "Add Song"}</a>
+    `;
+
+    desc.querySelector(".addSongBtn").addEventListener("click", () => {
+        if (stash.isMain) initImportSongModal(modal, stash);
+        else initAddSongsModal(modal, stash, async() => {
+            // Update the stash list, then click the stash again to reload it with the new songs. 
+            await updateStashList();
+            reloadStash(stash.id);
+        });
+    });
 
     songsEl.innerHTML = "";
 
@@ -130,7 +144,9 @@ async function loadStash(stash, el) {
     const stashSongs = mapSongsToStash(stash, allSongs);
 
     if (stashSongs.length === 0) {
-        // TODO: Show custom message.
+        songsEl.innerHTML = `
+        
+        `;
         return;
     }
 
@@ -167,11 +183,18 @@ async function loadStash(stash, el) {
             mainQueue.import(...stashSongs);
             mainQueue.setPosition(song);
 
+            updateSongInfo(audio);
+
             el.className = "song playing";
         });
 
         songsEl.appendChild(el);
     });
+}
+
+function reloadStash(stashId) {
+    const stashEl = document.querySelector(`.stashes .stash#stash${stashId}`);
+    stashEl?.click();
 }
 
 /**

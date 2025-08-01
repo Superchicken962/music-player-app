@@ -55,24 +55,27 @@
             </div>
             
             <div class="controls">
-                <a class="shuffle"><i class="fa fa-shuffle"></i></a>
+                <!-- <a class="shuffle"><i class="fa fa-shuffle"></i></a> -->
                 <a class="previous"><i class="fa fa-backward"></i></a>
                 <a class="play" data-state="paused"><i class="fa fa-play"></i></a>
                 <a class="next"><i class="fa fa-forward"></i></a>
-                <a class="shuffle"><i class="fa fa-repeat"></i></a>
+                <!-- <a class="shuffle"><i class="fa fa-repeat"></i></a> -->
             </div>
             
             <div class="progress">
-                <span class="time"></span>
+                <span class="time elapsed">0:00</span>
                 <input type="range" min="0" max="100" value="0"/>
+                <span class="time duration">0:00</span>
             </div>
         </div>
     </div>
+
     <script src="./util/Queue.js"></script>
     <script src="./util/utility.js"></script>
     <script src="./util/SongMetadata.js"></script>
     <script src="./util/Song.js"></script>
     <script src="./util/Stash.js"></script>
+    <script src="./util/Modal.js"></script>
     <script src="./renderer.js"></script>
 </body>
 </html>

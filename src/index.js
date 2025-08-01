@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('node:path');
 const { readAndParseJson, createRequiredFolders } = require('./lib/utils');
 const fs = require("node:fs");
+const discord = require("discord-rich-presence")("");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -25,7 +26,14 @@ const createWindow = () => {
 
     // Open the DevTools.
     // mainWindow.webContents.openDevTools();
+
+    return mainWindow;
 };
+
+/**
+ * @type { BrowserWindow }
+ */
+let mainAppWindow;
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -35,14 +43,16 @@ app.whenReady().then(() => {
     ipcMain.handle("data:getSongs", getSongs);
     ipcMain.handle("data:createStash", newStash);
     ipcMain.handle("data:deleteStash", deleteStash);
+    ipcMain.handle("update:songInfo", updateSongInfo);
+    ipcMain.handle("update:stashSongs", addSongsToStash);
 
-    createWindow();
+    mainAppWindow = createWindow();
 
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     app.on("activate", () => {
         if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
+            mainAppWindow = createWindow();
         }
     });
 });
@@ -106,4 +116,39 @@ async function deleteStash(e, id) {
     // Otherwise, remove the stash from the array and save.
     stashes.splice(stashIndex, 1);
     return fs.promises.writeFile(path.join(app.getAppPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
+}
+
+async function addSongsToStash(e, stashId, songIds) {
+    const stashes = await readAndParseJson(path.join(app.getAppPath(), "data/stashes.json"), []);
+    const stash = stashes.find(s => s.id === stashId);
+    if (!stash) return;
+
+    // Add song ids to the stash song list.
+    stash.songs = stash.songs || [];
+    stash.songs.push(...songIds);
+
+    // Save the file with the modified stash.
+    return fs.promises.writeFile(path.join(app.getAppPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
+}
+
+async function updateSongInfo(e, songInfo) {
+    // Hide rich presence if given null.
+    if (!songInfo) {
+        mainAppWindow.setTitle("MusicStash");
+        return;
+    }
+
+    mainAppWindow.setTitle(`${songInfo.artist} - ${songInfo.name}`);
+    
+    console.log(songInfo);
+    discord.updatePresence({
+        state: songInfo.name,
+        type: 2,
+        details: songInfo.artist,
+        startTimestamp: Date.now() - (songInfo.currentTime * 1000),
+        endTimestamp: Date.now() + ((songInfo.duration - songInfo.currentTime) * 1000),
+        largeImageKey: "na",
+        smallImageKey: "na",
+        instance: true
+    });
 }

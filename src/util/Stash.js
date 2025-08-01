@@ -7,12 +7,12 @@ class Stash {
     }
 
     /**
-     * Deserialize a regular object into a Song object.
+     * Deserialize a regular object into a Stash object.
      * 
      * @param { Object } obj - Object to use.
-     * @returns { Song }
+     * @returns { Stash }
      */
     static deserialize(obj) {
-        return Object.create(Song.prototype, Object.getOwnPropertyDescriptors(obj))
+        return Object.create(Stash.prototype, Object.getOwnPropertyDescriptors(obj))
     }
 }

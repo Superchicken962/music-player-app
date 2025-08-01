@@ -37,6 +37,10 @@ const isCurrentlyPlaying = (stashId, songId) => {
     return currentlyPlaying.stashId === stashId && currentlyPlaying.songId === songId;
 }
 
+function updateSongInfo(audio) {
+    window.electronAPI.updateSongInfo({...mainQueue.getCurrent(), duration: audio.duration, currentTime: audio.currentTime});   
+}
+
 /**
  * 
  * @param { HTMLAudioElement } audio - Audio element.
@@ -44,8 +48,13 @@ const isCurrentlyPlaying = (stashId, songId) => {
  */
 function initAudioFunctions(audio) {
     const playBtn = document.querySelector(".audioPlayerBar .play");
+    const nextBtn = document.querySelector(".audioPlayerBar .next");
+    const prevBtn = document.querySelector(".audioPlayerBar .previous");
     const progressBar = document.querySelector(".audioPlayerBar .progress input[type=range]");
+    const elapsedTime = document.querySelector(".audioPlayerBar .progress .time.elapsed");
+    const totalTime = document.querySelector(".audioPlayerBar .progress .time.duration");
 
+    let timeI = 0;
     audio.ontimeupdate = (event) => {
         const controlsEl = document.querySelector(".audioPlayerBar .controls");
 
@@ -53,9 +62,19 @@ function initAudioFunctions(audio) {
         const duration = audio.duration;
         const progress = (seconds / duration) * 100;
 
-        console.log(seconds, duration, `${progress.toFixed(2)}%`);
+        elapsedTime.textContent = `${Math.floor(seconds/60)}:${("0"+Math.floor(seconds)%60).slice(-2)}`;
+        if (duration) {
+            totalTime.textContent = `${Math.floor(duration/60)}:${("0"+Math.floor(duration)%60).slice(-2)}`;
+        }
         
         progressBar.value = progress;
+
+        // Essentially update rich presence every ~10 seconds.
+        if (timeI === 0) {
+            updateSongInfo(audio);
+        }
+
+        timeI = (timeI+1)%30;
     };
 
     // Handle progress bar.
@@ -67,15 +86,33 @@ function initAudioFunctions(audio) {
         audio.currentTime = newTime;
     }
 
+    // Handle skipping to previous and next song.
+    nextBtn.onclick = () => {
+        nextSong(audio);
+        audio.play();
+    }
+
+    prevBtn.onclick = () => {
+        // Technically go to the previous song by going back twice, then next.
+        mainQueue.previous();
+        mainQueue.previous();
+
+        nextSong(audio);
+        audio.play();
+    }
+
     // Handle playing, pausing and ending.
     audio.onplay = () => {
         playBtn.setAttribute("data-state", "playing");
         playBtn.innerHTML = `<i class="fa fa-pause"></i>`;
+        updateSongInfo(audio);
     }
 
     audio.onpause = () => {
         playBtn.innerHTML = `<i class="fa fa-play"></i>`;
         playBtn.setAttribute("data-state", "paused");
+
+        window.electronAPI.updateSongInfo(null);
     }
 
     audio.onended = () => {
@@ -185,11 +222,90 @@ let keyBindsListener = null;
 function registerKeyBinds(binds, ignoreCase = true) {
     if (keyBindsListener) document.removeEventListener("keydown", keyBindsListener);
 
-    keyBindsListener = document.addEventListener("keydown", (e) => {
+    keyBindsListener = (e) => {
         const key = (ignoreCase) ? e.key.toLowerCase() : e.key;
 
         if (typeof binds[key] === "function") {
             binds[key](e);
         }
+    };
+
+    document.addEventListener("keydown", keyBindsListener);
+}
+
+/**
+ * @param { Modal } modal 
+ */
+async function initAddSongsModal(modal, stash, onSave) {
+    const songsData = await window.electronAPI.getSongs();
+    const allSongs = Object.values(songsData).map(song => Song.deserialize(song));
+    
+    // Filter songs to be only ones that are not in the stash already.
+    const nonStashSongs = allSongs.filter(song => !stash.songs.includes(song.id));
+
+    modal.setHTML(`
+        <h2>Add Songs to ${stash.name}</h2>
+
+        <p>Remove songs by right clicking them in the stash.</p>
+
+        <div class="songsList">
+            ${nonStashSongs.length === 0 ? `Looks like you have all the possible songs in your stash already!` : ""}
+
+            ${nonStashSongs.map(song => `
+                <div class="song" data-id="${song.id}">
+                    <span class="artist">${song.artist}</span>
+                    <span class="name">${song.name}</span>
+                </div>
+            `).join("")}
+        </div>
+
+        <a class="button solid inline cancel">Cancel</a>
+        <a class="button solid inline save">Save</a>
+    `);
+
+    const songsToAdd = [];
+
+    // Handle each song being clicked.
+    modal.setListenerOnElements(".songsList .song", "click", (e, el) => {
+        const songId = el.getAttribute("data-id");
+        if (!songId) return;
+
+        // If song has already been selected, deselect it.
+        if (songsToAdd.includes(songId)) {
+            songsToAdd.splice(songsToAdd.indexOf(songId), 1);
+            el.classList.remove("selected");
+            return;
+        }
+
+        songsToAdd.push(songId);
+        el.classList.add("selected");
     });
+
+    // Handle "cancel" being clicked.
+    modal.setListenerOnElements(".button.cancel", "click", () => {
+        modal.hide();
+    });
+
+    // Handle "save" being clicked.
+    modal.setListenerOnElements(".button.save", "click", async() => {
+        await window.electronAPI.addSongsToStash(stash.id, songsToAdd);
+        modal.hide();
+
+        onSave?.();
+    });
+
+    modal.show();
+}
+function initImportSongModal(modal) {
+    modal.setHTML(`
+        <h2>Import Song</h2>
+
+        <a class="button solid inline cancel">Cancel</a>
+    `);
+
+    modal.setListenerOnElements(".button.cancel", "click", () => {
+        modal.hide();
+    });
+
+    modal.show();
 }
