@@ -125,6 +125,12 @@ hr {
     display: none !important;
 }
 
+.songs {
+    min-height: 450px;
+    height: fit-content;
+    overflow-y: auto;
+}
+
 .songs .song {
     display: block;
     margin: auto;
@@ -317,4 +323,32 @@ hr {
 .modal .songsList .song.selected {
     color: var(--active_song) !important;
     font-weight: bold;
+}
+
+.fileInput {
+    display: block;
+    margin: auto;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.sectionSelect {
+    display: block;
+    margin: auto;
+    margin-bottom: 10px;
+}
+.sectionSelect a {
+    display: inline-block;
+    margin-right: 10px;
+    color: rgb(180, 180, 180);
+    border-bottom: 2px solid transparent;
+}
+.sectionSelect a:hover {
+    border-bottom: 2px solid white;
+    cursor: pointer;
+    color: var(--text);
+}
+.sectionSelect a.selected {
+    color: var(--text);
+    border-bottom: 2px solid white;
 }

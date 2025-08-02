@@ -1,5 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const ytdl = require("@distube/ytdl-core");
+const ffmpeg = require("fluent-ffmpeg");
 
 /**
  * Read and parse a json file at the given location.
@@ -43,7 +45,46 @@ async function createRequiredFolders(appPath, folders) {
     }
 }
 
+async function downloadYoutubeVideo(url, outpath = "", onComplete, onProgress) {
+    const videoInfo = await ytdl.getInfo(url);
+
+    const videoTitle = videoInfo.videoDetails.title;
+    const outputFile = path.join(outpath, `${videoTitle}.mp3`);
+    const tempFile = path.join(outpath, `temp_${videoTitle}.mp3`);
+    
+    // Download video and audion and log progress.
+    ytdl(url, { quality: "highestaudio", filter: "audioonly" })
+    .pipe(fs.createWriteStream(tempFile))
+    .on('finish', () => {
+        const startTime = new Date();
+
+        ffmpeg(tempFile)
+        .output(outputFile)
+        .on('progress', (progress) => {
+            const percent = Math.floor(progress.percent);
+            const timemark = progress.timemark;
+
+            // Estimate the remaining time using the elapsed time and percentage per progress mark.
+            const elapsedTime = Date.now() - startTime;
+            const timePerPercentProgress = (elapsedTime / progress.percent);
+            const remainingPercent = 100 - percent;
+
+            const remainingSeconds = (timePerPercentProgress * remainingPercent)/1000;
+
+            console.log(`Progress: ${percent}% - Time: ${timemark} - Remaining: ${remainingSeconds.toFixed(2)}s`);
+            onProgress?.({percent, elapsedTime, remainingPercent, remainingSeconds});
+        })
+        .on('end', () => {
+            console.log(`Conversion complete! Output file: ${outputFile}`);
+            fs.unlinkSync(tempFile);
+            onComplete?.(outputFile);
+        })
+        .run();
+    });
+}
+
 module.exports = {
     readAndParseJson,
     createRequiredFolders,
+    downloadYoutubeVideo
 };

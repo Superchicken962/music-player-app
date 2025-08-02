@@ -296,16 +296,124 @@ async function initAddSongsModal(modal, stash, onSave) {
 
     modal.show();
 }
-function initImportSongModal(modal) {
-    modal.setHTML(`
-        <h2>Import Song</h2>
+function showImportPage() {
+    const display = document.querySelector(".stashDisplay");
 
-        <a class="button solid inline cancel">Cancel</a>
-    `);
+    display.querySelector(".title").textContent = "Import Songs";
+    display.querySelector(".description").textContent = "Import from file system, or download songs from YouTube.";
+    const songs = display.querySelector(".songs");
+    songs.classList.add("importSongs");
 
-    modal.setListenerOnElements(".button.cancel", "click", () => {
-        modal.hide();
+    const currentlySelected = (localStorage.getItem("importSectionSelected") ?? "local");
+
+    songs.innerHTML = `
+        <div class="sectionSelect">
+            <a class="${(currentlySelected==="local") ? "selected" : ""}" data-value="local">Local Import</a>
+            <a class="${(currentlySelected==="local") ? "" : "selected"}" data-value="download">YouTube Download</a>
+        </div>
+
+        <div class="section local hidden" data-for="local">
+            <input class="fileInput" type="file" accept=".mp3" name="file"/>
+
+            <input id="localImportMoveFile" type="checkbox" name="localImportMoveFile"/>
+            <label for="localImportMoveFile">Move file to app directory</label>
+
+            <br><br>
+
+            <a class="button inline solid import">Import</a>
+        </div>
+
+        <div class="section download hidden" data-for="download">
+            <h4>Download from YouTube</h4>
+
+            <input name="url" type="url" placeholder="YouTube URL..."/>
+
+            <a class="button inline solid download">Download</a>
+        </div>
+    `;
+
+    // Handle selecting sections.
+    const selectSection = (val) => {
+        addClassToAll(".songs .section", "hidden");
+        removeClassFromAll(`.songs .section[data-for=${val}]`, "hidden");
+    }
+
+    selectSection(currentlySelected);
+
+    for (const select of songs.querySelectorAll(".sectionSelect a")) {
+        select.onclick = () => {
+            removeClassFromAll(".songs .sectionSelect a", "selected");
+            select.classList.add("selected");
+            localStorage.setItem("importSectionSelected", select.getAttribute("data-value"));
+
+            selectSection(select.getAttribute("data-value"));
+        }
+    }
+
+    // Handle importing both locally, and downloading youtube.
+
+    const downloadBtn = songs.querySelector(".button.download");
+    downloadBtn.addEventListener("click", () => {
+        downloadButtonClick(songs.querySelector(".section.download"));
     });
+}
 
-    modal.show();
+function downloadButtonClick(element) {
+    const values = harvestInputs(element);
+    
+    try {
+        const s = new URL(values.url);
+    } catch (error) {
+        // TODO: Show error/warning to page.
+        console.warn("Invalid url!");
+        return;
+    }
+    
+    const onProgress = (data) => {
+        console.log("progress", data);
+    }
+
+    const onComplete = (file) => {
+        console.log("done", file);
+    }
+
+    console.log(values.url);
+    window.electronAPI.downloadYoutubeAudio(values.url);
+}
+
+/**
+ * Removes a class from all elements in query selector.
+ *
+ * @param { String } selector - Selector to use.
+ * @param { String } className - Class to remove.
+ */
+function removeClassFromAll(selector, className) {
+    document.querySelectorAll(selector).forEach(e => e.classList.remove(className));
+}
+/**
+ * Adds a class to all elements in query selector.
+ *
+ * @param { String } selector - Selector to use.
+ * @param { String } className - Class to add.
+ */
+function addClassToAll(selector, className) {
+    document.querySelectorAll(selector).forEach(e => e.classList.add(className));
+}
+
+/**
+ * Harvest inputs and the values from a given container.
+ * 
+ * @param { HTMLElement } container - Container of inputs.
+ * @returns { Object } Key/val pairs from inputs.
+ */
+function harvestInputs(container) {
+    const vals = {};
+    
+    for (const inp of container.querySelectorAll("input")) {
+        if (!inp.name) continue;
+
+        vals[inp.name] = inp.value;
+    }
+
+    return vals;
 }

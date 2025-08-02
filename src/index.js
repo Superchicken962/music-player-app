@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('node:path');
-const { readAndParseJson, createRequiredFolders } = require('./lib/utils');
+const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo } = require('./lib/utils');
 const fs = require("node:fs");
 const discord = require("discord-rich-presence")("");
 
@@ -45,6 +45,7 @@ app.whenReady().then(() => {
     ipcMain.handle("data:deleteStash", deleteStash);
     ipcMain.handle("update:songInfo", updateSongInfo);
     ipcMain.handle("update:stashSongs", addSongsToStash);
+    ipcMain.handle("download:youtubeAudio", downloadVideoAudio);
 
     mainAppWindow = createWindow();
 
@@ -151,4 +152,10 @@ async function updateSongInfo(e, songInfo) {
         smallImageKey: "na",
         instance: true
     });
+}
+
+function downloadVideoAudio(e, url, onComplete, onProgress) {
+    console.log("Download?", url);
+    // TODO: Sort out the path.
+    downloadYoutubeVideo(url, "", onComplete, onProgress);
 }

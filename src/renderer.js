@@ -110,6 +110,7 @@ async function loadStash(stash, el) {
     const title = stashEl.querySelector(".title");
     const desc = stashEl.querySelector(".description");
     const songsEl = stashEl.querySelector(".songs");
+    songsEl.className = "songs";
 
     const mainTitle = document.querySelector(".mainTitle");
     mainTitle.classList.add("hidden");
@@ -130,8 +131,12 @@ async function loadStash(stash, el) {
     `;
 
     desc.querySelector(".addSongBtn").addEventListener("click", () => {
-        if (stash.isMain) initImportSongModal(modal, stash);
-        else initAddSongsModal(modal, stash, async() => {
+        if (stash.isMain) {
+            showImportPage();
+            return;
+        }
+
+        initAddSongsModal(modal, stash, async() => {
             // Update the stash list, then click the stash again to reload it with the new songs. 
             await updateStashList();
             reloadStash(stash.id);
