@@ -45,46 +45,82 @@ async function createRequiredFolders(appPath, folders) {
     }
 }
 
-async function downloadYoutubeVideo(url, outpath = "", onComplete, onProgress) {
+/**
+ * @typedef { Object } YoutubeVideoInfo
+ * @property { String } id - Video id.
+ * @property { String } title - Video title.
+ * @property { String } description - Video description.
+ * @property { String } author - Video author/channel.
+ * @property { Number } length - Video length (seconds).
+ */
+
+/**
+ * Get basic information of a youtube video.
+ * 
+ * @param { String } url - Video url.
+ * @returns { YoutubeVideoInfo }
+ */
+async function getYoutubeVideoInfo(url) {
     const videoInfo = await ytdl.getInfo(url);
 
-    const videoTitle = videoInfo.videoDetails.title;
-    const outputFile = path.join(outpath, `${videoTitle}.mp3`);
-    const tempFile = path.join(outpath, `temp_${videoTitle}.mp3`);
+    const title = videoInfo.videoDetails.title;
+    const author = videoInfo.videoDetails.author;
+    const id = videoInfo.videoDetails.videoId;
+    const length = videoInfo.videoDetails.lengthSeconds;
+    const description = videoInfo.videoDetails.description
+
+    return {
+        title, author, id, length, description
+    };
+}
+
+/**
+ * Downloads a youtube video as mp3.
+ * 
+ * @param { String } url - Video url.
+ * @param { String } fileName - File name to save as.
+ * @param { String? } outpath - Path to save file to.
+ * @param { Function? } onProgress - Callback for progress updates.
+ */
+async function downloadYoutubeVideo(url, fileName, outpath = "", onProgress) {
+    return new Promise(resolve => {
+        const outputFile = path.join(outpath, `${fileName}.mp3`);
+        const tempFile = path.join(outpath, `temp_${fileName}.mp3`);
+        
+        // Download video and audion and log progress.
+        ytdl(url, { quality: "highestaudio", filter: "audioonly" })
+        .pipe(fs.createWriteStream(tempFile))
+        .on('finish', () => {
+            const startTime = new Date();
     
-    // Download video and audion and log progress.
-    ytdl(url, { quality: "highestaudio", filter: "audioonly" })
-    .pipe(fs.createWriteStream(tempFile))
-    .on('finish', () => {
-        const startTime = new Date();
-
-        ffmpeg(tempFile)
-        .output(outputFile)
-        .on('progress', (progress) => {
-            const percent = Math.floor(progress.percent);
-            const timemark = progress.timemark;
-
-            // Estimate the remaining time using the elapsed time and percentage per progress mark.
-            const elapsedTime = Date.now() - startTime;
-            const timePerPercentProgress = (elapsedTime / progress.percent);
-            const remainingPercent = 100 - percent;
-
-            const remainingSeconds = (timePerPercentProgress * remainingPercent)/1000;
-
-            console.log(`Progress: ${percent}% - Time: ${timemark} - Remaining: ${remainingSeconds.toFixed(2)}s`);
-            onProgress?.({percent, elapsedTime, remainingPercent, remainingSeconds});
-        })
-        .on('end', () => {
-            console.log(`Conversion complete! Output file: ${outputFile}`);
-            fs.unlinkSync(tempFile);
-            onComplete?.(outputFile);
-        })
-        .run();
+            ffmpeg(tempFile)
+            .output(outputFile)
+            .on('progress', (progress) => {
+                const percent = Math.floor(progress.percent);
+                const timemark = progress.timemark;
+    
+                // Estimate the remaining time using the elapsed time and percentage per progress mark.
+                const elapsedTime = Date.now() - startTime;
+                const timePerPercentProgress = (elapsedTime / progress.percent);
+                const remainingPercent = 100 - percent;
+    
+                const remainingSeconds = (timePerPercentProgress * remainingPercent)/1000;
+    
+                console.log(`Progress: ${percent}% - Time: ${timemark} - Remaining: ${remainingSeconds.toFixed(2)}s`);
+                onProgress?.({percent, elapsedTime, remainingPercent, remainingSeconds});
+            })
+            .on('end', () => {
+                fs.unlinkSync(tempFile);
+                resolve(outputFile);
+            })
+            .run();
+        });
     });
 }
 
 module.exports = {
     readAndParseJson,
     createRequiredFolders,
+    getYoutubeVideoInfo,
     downloadYoutubeVideo
 };

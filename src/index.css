@@ -112,6 +112,10 @@ body {
 .button.solid:hover {
     background-color: var(--solid_button_hover);
 }
+.button.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
 
 hr {
     border: 1px solid var(--subtle);
@@ -351,4 +355,10 @@ hr {
 .sectionSelect a.selected {
     color: var(--text);
     border-bottom: 2px solid white;
+}
+
+.block {
+    display: block;
+    margin: auto;
+    margin-bottom: 10px;
 }

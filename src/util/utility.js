@@ -137,6 +137,8 @@ function initAudioFunctions(audio) {
     volumeEl.value = (localStorage.getItem("volume") ?? 0.5) * 100;
 
     const togglePause = () => {
+        if (!currentlyPlaying.songId) return;
+
         if (playBtn.getAttribute("data-state") === "paused") {
             audio.play();
             return;
@@ -166,7 +168,7 @@ function setPlayingSong(stashId, song) {
     nameEl.textContent = reduceString(song.name, 22);
     artistEl.textContent = reduceString(song.artist, 22);
 
-    const songEl = document.querySelector(`.song#${song.id}`);
+    const songEl = document.querySelector(`.song[data-id='${song.id}']`);
     songEl.className = "song playing";
 }
 
@@ -328,7 +330,7 @@ function showImportPage() {
 
             <input name="url" type="url" placeholder="YouTube URL..."/>
 
-            <a class="button inline solid download">Download</a>
+            <a class="button inline solid download">Go</a>
         </div>
     `;
 
@@ -353,12 +355,12 @@ function showImportPage() {
     // Handle importing both locally, and downloading youtube.
 
     const downloadBtn = songs.querySelector(".button.download");
-    downloadBtn.addEventListener("click", () => {
-        downloadButtonClick(songs.querySelector(".section.download"));
+    downloadBtn.addEventListener("click", (e) => {
+        downloadButtonClick(e, songs.querySelector(".section.download"));
     });
 }
 
-function downloadButtonClick(element) {
+async function downloadButtonClick(event, element) {
     const values = harvestInputs(element);
     
     try {
@@ -377,8 +379,59 @@ function downloadButtonClick(element) {
         console.log("done", file);
     }
 
-    console.log(values.url);
-    window.electronAPI.downloadYoutubeAudio(values.url);
+    // Disable the button so it  can't be clicked again.
+    event.target.classList.add("disabled");
+    element.innerHTML = `
+        <p>Loading YouTube Video...</p>
+    `;
+
+    const videoInfo = await window.electronAPI.getYoutubeVideoInfo(values.url);
+    console.log(videoInfo);
+
+    element.innerHTML = `
+        <p>
+            ${videoInfo.author?.name}<br>
+            ${videoInfo.title}<br>
+            ${videoInfo.length}s
+        </p>
+
+        <div class="block">
+            <input id="songArtist" name="songArtist" value="${videoInfo.author?.name}"/>
+            <label for="songArtist">Artist</label>
+
+            <br>
+
+            <input id="songTitle" name="songTitle" value="${videoInfo.title}"/>
+            <label for="songTitle">Song Name</label>
+        </div>
+
+        <a class="button inline solid cancel">Cancel</a>
+        <a class="button inline solid download">Download</a>
+    `;
+
+    const cancelBtn = element.querySelector(".button.cancel");
+    cancelBtn.addEventListener("click", showImportPage);
+
+    // TODO: Add download progress.
+
+    const downloadBtn = element.querySelector(".button.download");
+    downloadBtn.addEventListener("click", async() => {
+        cancelBtn.classList.add("disabled");
+        downloadBtn.classList.add("disabled");
+
+        const fields = harvestInputs(element);
+
+        const path = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
+        const newSong = new Song(videoInfo.id, fields["songTitle"], fields["songArtist"], path, {});
+
+        await window.electronAPI.newSong(newSong);
+
+        element.innerHTML = `
+            Download complete!
+        `;
+
+        updateStashList();
+    });
 }
 
 /**

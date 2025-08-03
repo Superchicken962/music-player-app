@@ -12,6 +12,7 @@ async function updateStashList() {
         const el = document.createElement("div");
         el.className = "stash";
         el.id = `stash${stash.id}`;
+        el.setAttribute("data-id", stash.id);
 
         el.innerHTML = `
             <h3>${stash.name ?? "Unknown"}</h3>
@@ -159,6 +160,7 @@ async function loadStash(stash, el) {
         const el = document.createElement("div");
         el.className = "song";
         el.id = song.id;
+        el.setAttribute("data-id", song.id);
         el.role = "button";
 
         // Check if this song is the one playing - if so, highlight it.

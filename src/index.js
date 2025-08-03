@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('node:path');
-const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo } = require('./lib/utils');
+const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo } = require('./lib/utils');
 const fs = require("node:fs");
 const discord = require("discord-rich-presence")("");
 
@@ -46,6 +46,8 @@ app.whenReady().then(() => {
     ipcMain.handle("update:songInfo", updateSongInfo);
     ipcMain.handle("update:stashSongs", addSongsToStash);
     ipcMain.handle("download:youtubeAudio", downloadVideoAudio);
+    ipcMain.handle("get:youtubeVideoInfo", (e, url) => { return getYoutubeVideoInfo(url); });
+    ipcMain.handle("data:newSong", newSong);
 
     mainAppWindow = createWindow();
 
@@ -154,8 +156,13 @@ async function updateSongInfo(e, songInfo) {
     });
 }
 
-function downloadVideoAudio(e, url, onComplete, onProgress) {
-    console.log("Download?", url);
-    // TODO: Sort out the path.
-    downloadYoutubeVideo(url, "", onComplete, onProgress);
+function downloadVideoAudio(e, url, videoId, onProgress) {
+    return downloadYoutubeVideo(url, `YT_${videoId}`, path.join(app.getAppPath(), "data/songs"), onProgress);
+}
+
+async function newSong(e, song) {
+    const songs = await readAndParseJson(path.join(app.getAppPath(), "data/songs.json"), {});
+    songs[song.id] = song;
+
+    return fs.promises.writeFile(path.join(app.getAppPath(), "data/songs.json"), JSON.stringify(songs), "utf-8");
 }
