@@ -9,5 +9,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     addSongsToStash: (stashId, songIds) => ipcRenderer.invoke("update:stashSongs", stashId, songIds),
     downloadYoutubeAudio: (url, videoId, onProgress) => ipcRenderer.invoke("download:youtubeAudio", url, videoId, onProgress),
     getYoutubeVideoInfo: (url) => ipcRenderer.invoke("get:youtubeVideoInfo", url),
-    newSong: (song) => ipcRenderer.invoke("data:newSong", song)
+    newSong: (song) => ipcRenderer.invoke("data:newSong", song),
+
+    listenFor: (channel, listener) => {
+        ipcRenderer.removeAllListeners(channel);
+        ipcRenderer.on(channel, (event, ...args) => listener(...args));
+    }
 });

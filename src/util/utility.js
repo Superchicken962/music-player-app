@@ -389,30 +389,50 @@ async function downloadButtonClick(event, element) {
     console.log(videoInfo);
 
     element.innerHTML = `
-        <p>
-            ${videoInfo.author?.name}<br>
-            ${videoInfo.title}<br>
-            ${videoInfo.length}s
-        </p>
+        <div class="downloadInfo">
+            <p>
+                ${videoInfo.author?.name}<br>
+                ${videoInfo.title}<br>
+                ${videoInfo.length}s
+            </p>
 
-        <div class="block">
-            <input id="songArtist" name="songArtist" value="${videoInfo.author?.name}"/>
-            <label for="songArtist">Artist</label>
+            <div class="block">
+                <input id="songArtist" name="songArtist" value="${videoInfo.author?.name}"/>
+                <label for="songArtist">Artist</label>
 
-            <br>
+                <br>
 
-            <input id="songTitle" name="songTitle" value="${videoInfo.title}"/>
-            <label for="songTitle">Song Name</label>
+                <input id="songTitle" name="songTitle" value="${videoInfo.title}"/>
+                <label for="songTitle">Song Name</label>
+            </div>
+
+            <a class="button inline solid cancel">Cancel</a>
+            <a class="button inline solid download">Download</a>
         </div>
 
-        <a class="button inline solid cancel">Cancel</a>
-        <a class="button inline solid download">Download</a>
+        <div class="progress">
+            <div class="progressBar">
+                <div class="bar"></div>
+            </div>
+            <p class="text">0%</p>
+            <p class="message"></p>
+        </div>
     `;
 
     const cancelBtn = element.querySelector(".button.cancel");
     cancelBtn.addEventListener("click", showImportPage);
 
-    // TODO: Add download progress.
+    const progressBar = element.querySelector(".progressBar .bar");
+    const progressText = element.querySelector(".progress .text");
+    const progressMessage = element.querySelector(".progress .message");
+
+    // Listen for download progress - show it on page.
+    window.electronAPI.listenFor("YTDownloadProgress", (data) => {
+        progressBar.style.width = `${data.percent}%`;
+        progressText.textContent = `${data.percent}%`;
+
+        console.log("Progress!", data);
+    });
 
     const downloadBtn = element.querySelector(".button.download");
     downloadBtn.addEventListener("click", async() => {
@@ -426,9 +446,15 @@ async function downloadButtonClick(event, element) {
 
         await window.electronAPI.newSong(newSong);
 
-        element.innerHTML = `
-            Download complete!
-        `;
+        // element.innerHTML = `
+        //     Download complete!
+        // `;
+
+        progressBar.style.width = "100%";
+        progressText.textContent = "100%";
+        progressMessage.textContent = "Download complete!";
+
+        element.querySelector(".downloadInfo")?.classList?.add("hidden");
 
         updateStashList();
     });

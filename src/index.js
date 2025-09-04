@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('node:path');
 const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo } = require('./lib/utils');
 const fs = require("node:fs");
-const discord = require("discord-rich-presence")("");
+const discord = require("discord-rich-presence")("752848644721475596");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -127,7 +127,7 @@ async function addSongsToStash(e, stashId, songIds) {
     if (!stash) return;
 
     // Add song ids to the stash song list.
-    stash.songs = stash.songs || [];
+    stash.songs = stash.songs || []; 
     stash.songs.push(...songIds);
 
     // Save the file with the modified stash.
@@ -142,8 +142,9 @@ async function updateSongInfo(e, songInfo) {
     }
 
     mainAppWindow.setTitle(`${songInfo.artist} - ${songInfo.name}`);
+    return;
     
-    console.log(songInfo);
+    // console.log(songInfo);
     discord.updatePresence({
         state: songInfo.name,
         type: 2,
@@ -156,7 +157,12 @@ async function updateSongInfo(e, songInfo) {
     });
 }
 
-function downloadVideoAudio(e, url, videoId, onProgress) {
+function downloadVideoAudio(e, url, videoId) {
+    const onProgress = (data) => {
+        // ipcMain.emit("YTDownloadProgress", data);
+        mainAppWindow.webContents.send("YTDownloadProgress", data);
+    }
+
     return downloadYoutubeVideo(url, `YT_${videoId}`, path.join(app.getAppPath(), "data/songs"), onProgress);
 }
 
