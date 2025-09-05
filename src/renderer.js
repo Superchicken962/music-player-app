@@ -24,6 +24,11 @@ async function updateStashList() {
             loadStash(stash, el);
         });
 
+        // TODO: Double click stash to start playing it - would require loading songs before this, so perhaps reconsider how song data is loaded and can be for all.
+        // el.addEventListener("dblclick", () => {
+        //     console.log(mainQueue.getCurrent(), mainQueue.getSize());
+        // });
+
         listEl.appendChild(el);
 
         // Do not add context menu for main - .
@@ -109,6 +114,7 @@ async function loadStash(stash, el) {
     selectedStash = el;
     selectedStashId = stash.id;
 
+    const lyricsPage = document.querySelector(".lyricsDisplay");
     const stashEl = document.querySelector(".stashDisplay");
     const title = stashEl.querySelector(".title");
     const desc = stashEl.querySelector(".description");
@@ -118,6 +124,7 @@ async function loadStash(stash, el) {
     const mainTitle = document.querySelector(".mainTitle");
     mainTitle.classList.add("hidden");
     stashEl.classList.remove("hidden");
+    hideLyricsPage();
 
     deselectAllStashes();
     el.classList.add("selected");
@@ -241,6 +248,7 @@ async function playSong(song) {
     }
 
     audio.volume = localStorage.getItem("volume") ?? 0.05;
+    loadLyrics(song);
     return true;
 }
 
@@ -256,6 +264,57 @@ async function createStash() {
     updateStashList();
 
     // loadStash(newStash);
+}
+
+const lyricsBtn = document.querySelector(".controls .lyrics");
+lyricsBtn.addEventListener("click", toggleLyricsPage);
+const lyricsPageEl = document.querySelector(".lyricsDisplay");
+
+function showLyricsPage() {
+    const stashEl = document.querySelector(".stashDisplay");
+    lyricsPageEl.classList.remove("hidden");
+    stashEl.classList.add("hidden");
+    lyricsBtn.classList.add("selected");
+}
+function hideLyricsPage() {
+    const stashEl = document.querySelector(".stashDisplay");
+    lyricsBtn.classList.remove("selected");
+    lyricsPageEl.classList.add("hidden");
+    stashEl.classList.remove("hidden");
+}
+function toggleLyricsPage() {
+    const showPage = lyricsPageEl.classList.contains("hidden");
+
+    if (showPage) {
+        showLyricsPage();
+        return;
+    }
+
+    hideLyricsPage();
+}
+
+async function loadLyrics(song) {
+    const lyricsEl = document.querySelector(".lyricsDisplay .lyrics");
+    const title = document.querySelector(".lyricsDisplay .title");
+    
+    const lyrics = await window.electronAPI.getLyrics(song.id);
+    console.log(lyrics);
+
+    if (!lyrics) {
+        lyricsEl.innerHTML = `
+            No Lyrics For This Song!<br>
+            Create some <a href="#">here</a>
+        `;
+        lyricsBtn.classList.add("none");
+        return;
+    }
+
+    lyricsBtn.classList.remove("none");
+    e
+    // TODO: Show lyrics and initiate events and audio sync stuff.
+    lyricsEl.innerHTML = `
+        ${song.name}
+    `;
 }
 
 const createStashBtn = document.querySelector(".createStashBtn");

@@ -49,6 +49,7 @@ app.whenReady().then(() => {
     ipcMain.handle("get:youtubeVideoInfo", (e, url) => { return getYoutubeVideoInfo(url); });
     ipcMain.handle("data:newSong", newSong);
     ipcMain.handle("update:stashInfo", editStash);
+    ipcMain.handle("data:getSongLyrics", getSongLyrics);
 
     mainAppWindow = createWindow();
 
@@ -184,4 +185,11 @@ async function editStash(e, id, name, desc) {
 
     // Save the file with the modified stash.
     return fs.promises.writeFile(path.join(app.getAppPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
+}
+
+async function getSongLyrics(e, id) {
+    const lyrics = await readAndParseJson(path.join(app.getAppPath(), "data/lyrics.json"), {});
+    const songLyrics = lyrics[id];
+    
+    return songLyrics;
 }

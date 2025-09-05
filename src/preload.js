@@ -16,5 +16,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on(channel, (event, ...args) => listener(...args));
     },
     
-    editStash: (id, name, description) => ipcRenderer.invoke("update:stashInfo", id, name, description)
+    editStash: (id, name, description) => ipcRenderer.invoke("update:stashInfo", id, name, description),
+    getLyrics: (songId) => ipcRenderer.invoke("data:getSongLyrics", songId)
 });
