@@ -37,4 +37,32 @@ class Modal {
             });
         }
     }
+
+    /**
+     * Sets text of an element in the modal, if found.
+     * 
+     * @param { String } selector 
+     * @param { String } text 
+     */
+    setElementText(selector, text) {
+        const el = document.querySelector(selector);
+        if (!el) return;
+
+        el.textContent = text;
+    }
+
+    /**
+     * Get all name/value pairs from elements in the modal.
+     * 
+     * @returns { Object }
+     */
+    getValues() {
+        const obj = {};
+
+        for (const el of document.querySelectorAll("[name]")) {
+            obj[el.name] = el.value;
+        }
+
+        return obj;
+    }
 }

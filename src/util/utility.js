@@ -165,8 +165,11 @@ function setPlayingSong(stashId, song) {
     const nameEl = document.querySelector(".audioPlayerBar .song .text .name");
     const artistEl = document.querySelector(".audioPlayerBar .song .text .artist");
 
-    nameEl.textContent = reduceString(song.name, 22);
-    artistEl.textContent = reduceString(song.artist, 22);
+    nameEl.textContent = reduceString(song.name, 18);
+    artistEl.textContent = reduceString(song.artist, 18);
+
+    nameEl.title = song.name;
+    artistEl.title = song.artist;
 
     const songEl = document.querySelector(`.song[data-id='${song.id}']`);
     songEl.className = "song playing";
@@ -225,7 +228,15 @@ function registerKeyBinds(binds, ignoreCase = true) {
     if (keyBindsListener) document.removeEventListener("keydown", keyBindsListener);
 
     keyBindsListener = (e) => {
-        const key = (ignoreCase) ? e.key.toLowerCase() : e.key;
+        let key = (ignoreCase) ? e.key.toLowerCase() : e.key;
+        
+        // Append shift/ctrl if they are held when pressing.
+        if (e.shiftKey && key !== "shift") {
+            key = `shift-${key}`;
+        }
+        if (e.ctrlKey && key !== "control") {
+            key = `ctrl-${key}`;
+        }
 
         if (typeof binds[key] === "function") {
             binds[key](e);
@@ -495,4 +506,34 @@ function harvestInputs(container) {
     }
 
     return vals;
+}
+
+/**
+ * Initiates a modal for editing a stash.
+ * 
+ * @param { Modal } modal
+ * @param { Stash } stash 
+ */
+function initEditStashModal(modal, stash, onSave) {
+    modal.setHTML(`
+        <h2>Editing Stash</h2>
+
+        <input class="textInput stashName" name="stashName" value="${stash.name}" placeholder="Name..."/>
+        <textarea class="textInput stashDesc" name="stashDesc" placeholder="Description...">${stash.description == "No description" ? "" : stash.description}</textarea>
+
+        <p class="output"></p>
+
+        <a class="button solid inline cancel">Cancel</a>
+        <a class="button solid inline save">Save</a>
+    `)
+    modal.show();
+
+    modal.setListenerOnElements(".button", "click", (e, el) => {
+        if (el.classList.contains("cancel")) {
+            modal.hide();
+            return;
+        }
+
+        onSave?.();
+    });
 }

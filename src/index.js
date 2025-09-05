@@ -48,6 +48,7 @@ app.whenReady().then(() => {
     ipcMain.handle("download:youtubeAudio", downloadVideoAudio);
     ipcMain.handle("get:youtubeVideoInfo", (e, url) => { return getYoutubeVideoInfo(url); });
     ipcMain.handle("data:newSong", newSong);
+    ipcMain.handle("update:stashInfo", editStash);
 
     mainAppWindow = createWindow();
 
@@ -159,7 +160,6 @@ async function updateSongInfo(e, songInfo) {
 
 function downloadVideoAudio(e, url, videoId) {
     const onProgress = (data) => {
-        // ipcMain.emit("YTDownloadProgress", data);
         mainAppWindow.webContents.send("YTDownloadProgress", data);
     }
 
@@ -171,4 +171,17 @@ async function newSong(e, song) {
     songs[song.id] = song;
 
     return fs.promises.writeFile(path.join(app.getAppPath(), "data/songs.json"), JSON.stringify(songs), "utf-8");
+}
+
+async function editStash(e, id, name, desc) {
+    const stashes = await readAndParseJson(path.join(app.getAppPath(), "data/stashes.json"), []);
+    const stash = stashes.find(s => s.id === id);
+    if (!stash) return;
+
+    // Set name/desc if provided.
+    if (name) stash.name = name;
+    if (desc) stash.description = desc;
+
+    // Save the file with the modified stash.
+    return fs.promises.writeFile(path.join(app.getAppPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
 }

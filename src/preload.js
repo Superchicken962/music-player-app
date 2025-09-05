@@ -14,5 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     listenFor: (channel, listener) => {
         ipcRenderer.removeAllListeners(channel);
         ipcRenderer.on(channel, (event, ...args) => listener(...args));
-    }
+    },
+    
+    editStash: (id, name, description) => ipcRenderer.invoke("update:stashInfo", id, name, description)
 });

@@ -103,9 +103,11 @@ function mapSongsToStash(stash, allSongs) {
 }
 
 let selectedStash = null;
+let selectedStashId = null;
 
 async function loadStash(stash, el) {
     selectedStash = el;
+    selectedStashId = stash.id;
 
     const stashEl = document.querySelector(".stashDisplay");
     const title = stashEl.querySelector(".title");
@@ -126,6 +128,7 @@ async function loadStash(stash, el) {
     const allSongs = Object.values(songsData).map(song => Song.deserialize(song));
 
     title.textContent = stash.name;
+    if (!stash.isMain) title.innerHTML += ` <a class="button inline editStashBtn"><i class="fa fa-pencil"></i></a>`;
     desc.innerHTML = `
         ${stash.description}<br><br>
         <a class="button solid inline addSongBtn">${stash.isMain ? "Import Song" : "Add Song"}</a>
@@ -141,6 +144,22 @@ async function loadStash(stash, el) {
             // Update the stash list, then click the stash again to reload it with the new songs. 
             await updateStashList();
             reloadStash(stash.id);
+        });
+    });
+
+    document.querySelector(".editStashBtn")?.addEventListener("click", () => {
+        initEditStashModal(modal, stash, async() => {
+            const values = modal.getValues();
+            if (!values.stashName) {
+                modal.setElementText(".output", "You must provide a name for the stash!");
+                return;
+            }
+
+            await window.electronAPI.editStash(selectedStashId, values.stashName, values.stashDesc);
+            await updateStashList();
+            reloadStash(selectedStashId);
+
+            modal.hide();
         });
     });
 
@@ -243,7 +262,14 @@ const createStashBtn = document.querySelector(".createStashBtn");
 createStashBtn.addEventListener("click", createStash);
 
 registerKeyBinds({
-    " ": () => {
+    " ": (e) => {
+        // Do not toggle pause if currently typing into an input.
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
         audioOptions.togglePause();
+    },
+    "ctrl-r": (e) => {
+        // Uncomment to prevent reloading - perhaps only use outside of development.
+        // e.preventDefault();
     }
 });
