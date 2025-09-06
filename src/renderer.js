@@ -293,30 +293,6 @@ function toggleLyricsPage() {
     hideLyricsPage();
 }
 
-async function loadLyrics(song) {
-    const lyricsEl = document.querySelector(".lyricsDisplay .lyrics");
-    const title = document.querySelector(".lyricsDisplay .title");
-    
-    const lyrics = await window.electronAPI.getLyrics(song.id);
-    console.log(lyrics);
-
-    if (!lyrics) {
-        lyricsEl.innerHTML = `
-            No Lyrics For This Song!<br>
-            Create some <a href="#">here</a>
-        `;
-        lyricsBtn.classList.add("none");
-        return;
-    }
-
-    lyricsBtn.classList.remove("none");
-    e
-    // TODO: Show lyrics and initiate events and audio sync stuff.
-    lyricsEl.innerHTML = `
-        ${song.name}
-    `;
-}
-
 const createStashBtn = document.querySelector(".createStashBtn");
 createStashBtn.addEventListener("click", createStash);
 

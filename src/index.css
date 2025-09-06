@@ -7,7 +7,7 @@
     --text: white;
     --text_hint: grey;
     --active_song: rgb(0, 180, 0);
-    --selection: rgb(0, 205, 0);
+    --selection: rgb(0, 220, 0);
     --solid_button: rgb(40, 98, 255);
     --solid_button_hover: rgb(20, 78, 230);
 }
@@ -254,6 +254,9 @@ hr {
 .audioPlayerBar .controls .lyrics.none {
     opacity: 0.6;
 }
+.audioPlayerBar .controls .lyrics:hover {
+    color: var(--active_song);
+}
 .audioPlayerBar .controls .lyrics.selected {
     color: var(--selection);
 }
@@ -400,4 +403,46 @@ hr {
     margin-bottom: 5px;
     font-size: 16px;
     width: 100%;
+}
+
+.lyricsDisplay .lyrics {
+    display: block;
+    margin: auto;
+    height: 500px;
+    border-radius: 15px;
+    margin-bottom: 110px;
+    position: relative;
+    width: 95%;
+}
+.lyricsDisplay .lyrics .lines {
+    display: block;
+    margin: auto;
+    position: absolute;
+    left:0;right:0;
+    bottom:0;top:0;
+    width: fit-content;
+    height: fit-content;
+    max-height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    text-align: center;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+.lyricsDisplay .lyrics .lines .line {
+    display: block;
+    margin: auto;
+    font-size: 42px;
+    margin-top: 10px;
+    color: rgb(180,180,180);
+    transition: 0.05s ease-in-out color;
+}
+.lyricsDisplay .lyrics .lines .line.gap {
+    margin-bottom: 50px;
+}
+.lyricsDisplay .lyrics .lines .line:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+.lyricsDisplay .lyrics .lines .line.played {
+    color: white;
 }

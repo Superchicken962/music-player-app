@@ -31,7 +31,7 @@ function getNumberSuffix(num) {
 
 const mainQueue = new Queue();
 
-const currentlyPlaying = { stashId: null, songId: null };
+const currentlyPlaying = { stashId: null, songId: null, lyrics: null };
 
 const isCurrentlyPlaying = (stashId, songId) => {
     return currentlyPlaying.stashId === stashId && currentlyPlaying.songId === songId;
@@ -68,6 +68,8 @@ function initAudioFunctions(audio) {
         }
         
         progressBar.value = progress;
+
+        updateLyricsProgress(audio, currentlyPlaying.lyrics);
 
         // Essentially update rich presence every ~10 seconds.
         if (timeI === 0) {
@@ -191,7 +193,8 @@ function nextSong(audio) {
     deselectPlayingSongs();
     setPlayingSong(currentlyPlaying.stashId, nextSong);
 
-    mainQueue.next();
+    mainQueue.next()
+    loadLyrics(nextSong);
 
     return wasLast;
 }
@@ -536,4 +539,115 @@ function initEditStashModal(modal, stash, onSave) {
 
         onSave?.();
     });
+}
+
+/**
+ * Allow use of gaps in lyrics?
+ */
+const USE_LYRIC_GAPS = true;
+const USE_SMOOTH_SCROLL = true;
+
+let useAutoScroll = true;
+
+async function loadLyrics(song) {
+    const lyricsEl = document.querySelector(".lyricsDisplay .lyrics");
+    const title = document.querySelector(".lyricsDisplay .title");
+    
+    const lyrics = await window.electronAPI.getLyrics(song.id);
+
+    if (!lyrics) {
+        lyricsEl.innerHTML = `
+            No Lyrics For This Song!<br>
+            Create some <a href="#">here</a>
+        `;
+        lyricsBtn.classList.add("none");
+        currentlyPlaying.lyrics = null;
+        lyricsEl.style.backgroundColor = `none`;
+        return;
+    }
+
+    lyricsBtn.classList.remove("none");
+    // TODO: Show lyrics and initiate events and audio sync stuff.
+    lyricsEl.innerHTML = `
+        <div class="lines"></div>
+    `;
+    currentlyPlaying.lyrics = lyrics;
+    lyricsEl.style.backgroundColor = `rgba(${lyrics.colour ?? "255, 165, 0"}, 0.2)`;
+
+    useAutoScroll = true;
+}
+
+function updateLyricsProgress(audio, lyrics) {
+    const lyricLines = document.querySelector(".lyricsDisplay .lyrics .lines");
+    if (!lyrics?.lyrics) return;
+
+    // Create lines if they do not already exist.
+    if (lyricLines.querySelectorAll(".line").length === 0) {
+        for (const lyric of lyrics?.lyrics) {
+            const lyricEl = document.createElement("p");
+            lyricEl.className = "line";
+            lyricEl.innerHTML = formatLyricText(lyric.text);
+            lyricEl.setAttribute("data-at", lyric.at);
+
+            if (lyric.includeGap && USE_LYRIC_GAPS) {
+                lyricEl.classList.add("gap");
+            }
+
+            // When lyric line is clicked, go to that point in the song.
+            lyricEl.onclick = () => {
+                audio.currentTime = lyric.at;
+                audio.play();
+            }
+
+            lyricLines.appendChild(lyricEl);
+        }
+
+        // Disable auto scroll when user manually scrolls.
+        lyricLines.addEventListener("scroll", () => {
+            // Ignore non-user scroll.
+            if (ignoringFromAutoScroll) {
+                
+                // If using smooth scroll, wait 0.3s before changing var, otherwise do not wait.
+                let ms = USE_SMOOTH_SCROLL ? 300 : 0;
+
+                setTimeout(() => {
+                    ignoringFromAutoScroll = false;
+                }, ms);
+                return;
+            }
+
+            useAutoScroll = false;
+        });
+
+        return;
+    }
+
+    const existingLyrics = lyricLines.querySelectorAll(".line");
+    for (const lyric of existingLyrics) {
+        const atPoint = parseInt(lyric.getAttribute("data-at"));
+
+        // If lyric has passed "at" time, then add classname to show that. Otherwise remove it.
+        if (audio.currentTime >= atPoint) {
+            lyric.classList.add("played");
+            
+            if (useAutoScroll) {
+                // Set this to true to tell scroll listener that this was automatic, and to not disable autoscroll.
+                ignoringFromAutoScroll = true;
+                lyric.scrollIntoView({"block": "center", "behavior": USE_SMOOTH_SCROLL ? "smooth" : "instant" })
+            }
+        } else {
+            lyric.classList.remove("played");
+        }
+    }
+}
+
+/**
+ * Formats lyric - essentially just converts any special characters.
+ *
+ * @param { String } lyric - Lyric to format.
+ * @returns { String } Lyric.
+ */
+function formatLyricText(lyric) {
+    lyric = lyric.replaceAll("%m", `<i class="fa-solid fa-music"></i>`);
+    return lyric;
 }
