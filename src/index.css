@@ -117,6 +117,13 @@ body {
     opacity: 0.6;
     pointer-events: none;
 }
+.button.right {
+    float: right;
+    margin-right: 10px;
+}
+.button.active {
+    color: var(--selection);
+}
 
 hr {
     border: 1px solid var(--subtle);
@@ -408,11 +415,16 @@ hr {
 .lyricsDisplay .lyrics {
     display: block;
     margin: auto;
-    height: 500px;
+    height: 360px;
+    min-height: 300px;
     border-radius: 15px;
     margin-bottom: 110px;
     position: relative;
     width: 95%;
+    overflow: hidden;
+}
+.lyricsDisplay .lyrics.none {
+    height: fit-content;
 }
 .lyricsDisplay .lyrics .lines {
     display: block;
@@ -431,7 +443,8 @@ hr {
 .lyricsDisplay .lyrics .lines .line {
     display: block;
     margin: auto;
-    font-size: 42px;
+    /* font-size: 42px; */
+    font-size: 18px;
     margin-top: 10px;
     color: rgb(180,180,180);
     transition: 0.05s ease-in-out color;
@@ -445,4 +458,11 @@ hr {
 }
 .lyricsDisplay .lyrics .lines .line.played {
     color: white;
+}
+.lyricsDisplay .lyrics .lines .line.editRecorded {
+    color: var(--active_song);
+}
+
+.reminder {
+    color: var(--text_hint);
 }

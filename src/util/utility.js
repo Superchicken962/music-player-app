@@ -174,7 +174,7 @@ function setPlayingSong(stashId, song) {
     artistEl.title = song.artist;
 
     const songEl = document.querySelector(`.song[data-id='${song.id}']`);
-    songEl.className = "song playing";
+    if (songEl) songEl.className = "song playing";
 }
 
 /**
@@ -221,14 +221,21 @@ function deselectPlayingSongs() {
 }
 
 let keyBindsListener = null;
+let existingKeyBinds = {};
+
 /**
- * Register key binds to functions.
+ * Register new key binds to functions.
  * 
  * @param { Object } binds - Keybinds.
  * @param { Boolean } ignoreCase - Ignores case sensitivity, i.e. The same value is used for keys k and K if true (Use lowercase in keys).
  */
 function registerKeyBinds(binds, ignoreCase = true) {
     if (keyBindsListener) document.removeEventListener("keydown", keyBindsListener);
+
+    // Add new binds (or replace) to the existing binds.
+    for (const [key,val] of Object.entries(binds)) {
+        existingKeyBinds[key] = val;
+    }
 
     keyBindsListener = (e) => {
         let key = (ignoreCase) ? e.key.toLowerCase() : e.key;
@@ -241,12 +248,21 @@ function registerKeyBinds(binds, ignoreCase = true) {
             key = `ctrl-${key}`;
         }
 
-        if (typeof binds[key] === "function") {
-            binds[key](e);
+        if (typeof existingKeyBinds[key] === "function") {
+            existingKeyBinds[key](e);
         }
     };
 
     document.addEventListener("keydown", keyBindsListener);
+}
+
+/**
+ * Unregisters a keybind listener given the key.
+ * 
+ * @param { String } key - Keybind to unregister.
+ */
+function unregisterKeyBind(key) {
+    delete existingKeyBinds[key];
 }
 
 /**
@@ -548,10 +564,16 @@ const USE_LYRIC_GAPS = true;
 const USE_SMOOTH_SCROLL = true;
 
 let useAutoScroll = true;
+let ignoringFromAutoScroll = false;
+
+// Object for edited lyrics data to be placed.
+let editedLyrics = {};
 
 async function loadLyrics(song) {
     const lyricsEl = document.querySelector(".lyricsDisplay .lyrics");
     const title = document.querySelector(".lyricsDisplay .title");
+    const editBtn = document.querySelector(".editLyricsBtn");
+    const saveBtn = document.querySelector(".saveLyricsBtn");
     
     const lyrics = await window.electronAPI.getLyrics(song.id);
 
@@ -561,12 +583,16 @@ async function loadLyrics(song) {
             Create some <a href="#">here</a>
         `;
         lyricsBtn.classList.add("none");
+        lyricsEl.classList.add("none");
+        editBtn.classList.add("hidden");
         currentlyPlaying.lyrics = null;
-        lyricsEl.style.backgroundColor = `none`;
+        lyricsEl.style.backgroundColor = `transparent`;
         return;
     }
 
+    editBtn.classList.remove("hidden");
     lyricsBtn.classList.remove("none");
+    lyricsEl.classList.remove("none");
     // TODO: Show lyrics and initiate events and audio sync stuff.
     lyricsEl.innerHTML = `
         <div class="lines"></div>
@@ -574,8 +600,39 @@ async function loadLyrics(song) {
     currentlyPlaying.lyrics = lyrics;
     lyricsEl.style.backgroundColor = `rgba(${lyrics.colour ?? "255, 165, 0"}, 0.2)`;
 
+    // Toggle lyric edit mode when this button is clicked.
+    editBtn.onclick = () => {
+        editedLyrics = {};
+
+        // Disable edit mode.
+        if (lyricEditMode) {
+            editBtn.classList.remove("active");
+            saveBtn.classList.add("hidden");
+            lyricEditMode = false;
+            updateEditLyricsNote();
+
+            // Unregister the save keybind so it does not work when not in edit mode.
+            unregisterKeyBind("ctrl-s");
+            return;
+        }
+
+        // Enable edit mode.
+        editBtn.classList.add("active");
+        saveBtn.classList.remove("hidden");
+        lyricEditMode = true;
+        useAutoScroll = false;
+        updateEditLyricsNote();
+
+        // Add keybind to save.
+        registerKeyBinds({
+            "ctrl-s": saveEditedLyrics                
+        });
+    }
+
     useAutoScroll = true;
 }
+
+let lyricEditMode = false;
 
 function updateLyricsProgress(audio, lyrics) {
     const lyricLines = document.querySelector(".lyricsDisplay .lyrics .lines");
@@ -583,11 +640,14 @@ function updateLyricsProgress(audio, lyrics) {
 
     // Create lines if they do not already exist.
     if (lyricLines.querySelectorAll(".line").length === 0) {
+        let i = 0;
         for (const lyric of lyrics?.lyrics) {
             const lyricEl = document.createElement("p");
             lyricEl.className = "line";
+            lyricEl.id = `lyric${i}`;
             lyricEl.innerHTML = formatLyricText(lyric.text);
             lyricEl.setAttribute("data-at", lyric.at);
+            lyricEl.setAttribute("data-position", i);
 
             if (lyric.includeGap && USE_LYRIC_GAPS) {
                 lyricEl.classList.add("gap");
@@ -599,7 +659,26 @@ function updateLyricsProgress(audio, lyrics) {
                 audio.play();
             }
 
+            // TODO: For "edit" mode, this can set the current lyrics 'at' value.
+            lyricEl.oncontextmenu = () => {
+                if (!lyricEditMode) return;
+
+                // If right clicked again, undo.
+                if (editedLyrics[lyricEl.id]) {
+                    delete editedLyrics[lyricEl.id];
+                    lyricEl.classList.remove("editRecorded");
+                    updateEditLyricsNote();
+                    return;
+                }
+
+                editedLyrics[lyricEl.id] = {text: lyric.text, at: audio.currentTime, position: parseInt(lyricEl.getAttribute("data-position"))};
+                updateEditLyricsNote();
+
+                lyricEl.classList.add("editRecorded");
+            }
+
             lyricLines.appendChild(lyricEl);
+            i++;
         }
 
         // Disable auto scroll when user manually scrolls.
@@ -641,6 +720,28 @@ function updateLyricsProgress(audio, lyrics) {
     }
 }
 
+function updateEditLyricsNote() {
+    const note = document.querySelector(".lyricsDisplay .note");
+    let text = "";
+    
+    if (lyricEditMode) {
+        text = `
+            EDIT MODE<br><br>
+            Right click lyrics to sync it to the current position in the song, right click again to undo selection.
+            
+            <br><br>?? on lyrics to open a popup to edit the text.
+
+            <br><br>To save, either click the floppy disk button, or press CTRL+S.
+        `;
+    }
+    
+    if (Object.values(editedLyrics).length === 0) {
+        document.querySelectorAll(".lyricsDisplay .line").forEach(e => e.classList.remove("editRecorded"));
+    }
+
+    note.innerHTML = text;
+}
+
 /**
  * Formats lyric - essentially just converts any special characters.
  *
@@ -650,4 +751,8 @@ function updateLyricsProgress(audio, lyrics) {
 function formatLyricText(lyric) {
     lyric = lyric.replaceAll("%m", `<i class="fa-solid fa-music"></i>`);
     return lyric;
+}
+
+function saveEditedLyrics() {
+    navigator.clipboard.writeText(JSON.stringify(Object.values(editedLyrics), null, 4));
 }
