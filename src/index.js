@@ -196,19 +196,19 @@ async function getSongLyrics(e, id) {
 }
 
 async function updateSongLyrics(e, songId, lyrics) {
-    const lyrics = await readAndParseJson(path.join(app.getAppPath(), "data/lyrics.json"), {});
+    const lyricsData = await readAndParseJson(path.join(app.getAppPath(), "data/lyrics.json"), {});
 
-    const existing = lyrics[songId];
-    lyrics[songId] = lyrics;
+    const existing = lyricsData[songId];
+    lyricsData[songId] = lyrics;
 
     // If there was original data, add back any data/keys that were not included in updated data.
     if (existing) {
         for (const [key, val] of Object.entries(existing)) {
-            if (!lyrics[songId][key]) {
-                lyrics[songId][key] = val;
+            if (!lyricsData[songId][key]) {
+                lyricsData[songId][key] = val;
             }
         }
     }
 
-    return fs.promises.writeFile(path.join(app.getAppPath(), "data/lyrics.json"), JSON.stringify(stashes), "utf-8");
+    return fs.promises.writeFile(path.join(app.getAppPath(), "data/lyrics.json"), JSON.stringify(lyricsData, null, 4), "utf-8");
 }

@@ -624,7 +624,7 @@ async function loadLyrics(song) {
         updateEditLyricsNote();
 
         const save = () => {
-            saveEditedLyrics(song.id);
+            saveEditedLyrics(song.id, lyrics);
         }
 
         saveBtn.onclick = save;
@@ -759,17 +759,22 @@ function formatLyricText(lyric) {
     return lyric;
 }
 
-async function saveEditedLyrics(songId) {
-    // Sort lyrics by position, then delete it as to not include it in save files.
-    const lyrics = Object.values(editedLyrics)
-        .sort((a,b) => a.position - b.position)
-        .map(l => {
-            delete l.position;
+async function saveEditedLyrics(songId, existingLyrics) {
+    const edited = Object.values(editedLyrics)
+        .sort((a,b) => a.position - b.position);
 
-            return l;
-        });
 
-    await window.electronAPI.updateSongLyrics(songId, lyrics);
+    for (const lyric of edited) {
+        existingLyrics.lyrics[lyric.position] = lyric;
+    }
+    
+    // Do not save positions.
+    existingLyrics.lyrics = existingLyrics.lyrics.map(l => {
+        delete l.position;
+        return l;
+    });
+
+    await window.electronAPI.updateSongLyrics(songId, existingLyrics);
 
     showSmallMessage("Saved Lyrics!", 4000, "success", document.querySelector(".lyricsDisplay"));
 }
