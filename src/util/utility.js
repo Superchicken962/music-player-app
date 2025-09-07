@@ -717,7 +717,7 @@ function updateLyricsProgress(audio, lyrics) {
 
     const existingLyrics = lyricLines.querySelectorAll(".line");
     for (const lyric of existingLyrics) {
-        const atPoint = parseInt(lyric.getAttribute("data-at"));
+        const atPoint = parseFloat(lyric.getAttribute("data-at"));
 
         // If lyric has passed "at" time, then add classname to show that. Otherwise remove it.
         if (audio.currentTime >= atPoint) {
@@ -927,7 +927,7 @@ async function loadEditLyricsPage(song, lyrics, calledBack) {
 
     const copyBtn = pageEl.querySelector(".copyBtn");
     copyBtn.onclick = () => {
-        copyLyricsModal(song);
+        copyLyricsModal(song, pageEl);
     }
 }
 
@@ -1016,7 +1016,7 @@ function loadExistingLyricsToEdit(song, lyrics, element) {
     });
 }
 
-async function copyLyricsModal(song) {
+async function copyLyricsModal(song, element) {
     const modal = new Modal("copySongLyrics");
     
     const songs = await window.electronAPI.getSongsWithLyrics();
@@ -1025,7 +1025,7 @@ async function copyLyricsModal(song) {
     modal.setHTML(`
         <h2>Copy Lyrics from Song</h2>
 
-        <select>
+        <select name="songSelection">
             ${songs.map(s => 
                 `<option value="${s.id}">${s.name}</option>`
             ).join("")}
@@ -1037,13 +1037,17 @@ async function copyLyricsModal(song) {
         </div>
     `);
 
-    modal.setListenerOnElements(".button", "click", (e, el) => {
+    modal.setListenerOnElements(".button", "click", async(e, el) => {
         if (el.classList.contains("cancel")) {
             modal.hide();
             return;
         }
 
-        // TODO: Copy lyrics.
+        const songId = modal.getValues().songSelection;
+        const songLyrics = await window.electronAPI.getLyrics(songId);
+
+        loadExistingLyricsToEdit(song, songLyrics.lyrics, element);
+        modal.hide();
     });
 
     modal.show();
