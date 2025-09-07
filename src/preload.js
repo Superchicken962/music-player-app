@@ -18,5 +18,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     
     editStash: (id, name, description) => ipcRenderer.invoke("update:stashInfo", id, name, description),
     getLyrics: (songId) => ipcRenderer.invoke("data:getSongLyrics", songId),
-    updateSongLyrics: (songId, lyrics) => ipcRenderer.invoke("data:updateSongLyrics", songId, lyrics)
+    updateSongLyrics: (songId, lyrics) => ipcRenderer.invoke("data:updateSongLyrics", songId, lyrics),
+    getSongsWithLyrics: () => ipcRenderer.invoke("data:getSongsWithLyrics")
 });

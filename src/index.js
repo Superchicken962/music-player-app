@@ -51,6 +51,7 @@ app.whenReady().then(() => {
     ipcMain.handle("update:stashInfo", editStash);
     ipcMain.handle("data:getSongLyrics", getSongLyrics);
     ipcMain.handle("data:updateSongLyrics", updateSongLyrics);
+    ipcMain.handle("data:getSongsWithLyrics", getSongsWithLyrics);
 
     mainAppWindow = createWindow();
 
@@ -211,4 +212,12 @@ async function updateSongLyrics(e, songId, lyrics) {
     }
 
     return fs.promises.writeFile(path.join(app.getAppPath(), "data/lyrics.json"), JSON.stringify(lyricsData, null, 4), "utf-8");
+}
+
+async function getSongsWithLyrics() {
+    const songs = await readAndParseJson(path.join(app.getAppPath(), "data/songs.json"), {});
+    const lyricsData = await readAndParseJson(path.join(app.getAppPath(), "data/lyrics.json"), {});
+
+    const songsWithLyrics = Object.values(songs).filter(s => !!lyricsData[s.id]);
+    return songsWithLyrics;
 }

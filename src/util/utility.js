@@ -580,7 +580,7 @@ async function loadLyrics(song) {
     if (!lyrics) {
         lyricsEl.innerHTML = `
             No Lyrics For This Song!<br>
-            Add lyrics <a class="addLyricsBtn" href="#">here</a>
+            Add some lyrics <a class="addLyricsBtn" href="#">here</a>
         `;
         lyricsBtn.classList.add("none");
         lyricsEl.classList.add("none");
@@ -891,8 +891,13 @@ async function loadEditLyricsPage(song, lyrics, calledBack) {
 
         <textarea class="lyricsText" placeholder="Lyrics..."></textarea>
 
-        <a class="button success"><i class="fa fa-save fa-2x saveBtn"></i></a>
+        <a class="button inline success" title="Save changes"><i class="fa fa-save fa-2x saveBtn"></i></a>
+        <a class="button inline warning" title="Copy from another song"><i class="fa fa-copy fa-2x copyBtn"></i></a>
     `;
+
+    /**
+     * Handle saving the lyrics.
+     */
 
     const saveBtn = pageEl.querySelector(".saveBtn");
     const save = async() => {
@@ -915,6 +920,15 @@ async function loadEditLyricsPage(song, lyrics, calledBack) {
     registerKeyBinds({
         "ctrl-s": save
     });
+
+    /**
+     * Handle copying lyrics - opening modal and such.
+     */
+
+    const copyBtn = pageEl.querySelector(".copyBtn");
+    copyBtn.onclick = () => {
+        copyLyricsModal(song);
+    }
 }
 
 function loadExistingLyricsToEdit(song, lyrics, element) {
@@ -1000,4 +1014,37 @@ function loadExistingLyricsToEdit(song, lyrics, element) {
     registerKeyBinds({
         "ctrl-s": save
     });
+}
+
+async function copyLyricsModal(song) {
+    const modal = new Modal("copySongLyrics");
+    
+    const songs = await window.electronAPI.getSongsWithLyrics();
+    console.log(songs);
+    
+    modal.setHTML(`
+        <h2>Copy Lyrics from Song</h2>
+
+        <select>
+            ${songs.map(s => 
+                `<option value="${s.id}">${s.name}</option>`
+            ).join("")}
+        </select>
+
+        <div style="margin-top: 10px">
+            <a class="button solid inline cancel">Cancel</a>
+            <a class="button solid inline save">Copy</a>
+        </div>
+    `);
+
+    modal.setListenerOnElements(".button", "click", (e, el) => {
+        if (el.classList.contains("cancel")) {
+            modal.hide();
+            return;
+        }
+
+        // TODO: Copy lyrics.
+    });
+
+    modal.show();
 }
