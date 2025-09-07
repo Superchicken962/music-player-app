@@ -485,3 +485,7 @@ hr {
     background-color: rgba(85, 0, 0, 1);
     color: rgb(255, 0, 0);
 }
+
+.lyricColourInput {
+    border: none;
+}

@@ -621,7 +621,7 @@ async function loadLyrics(song) {
         saveBtn.classList.remove("hidden");
         lyricEditMode = true;
         useAutoScroll = false;
-        updateEditLyricsNote();
+        updateEditLyricsNote(lyrics);
 
         const save = () => {
             saveEditedLyrics(song.id, lyrics);
@@ -673,12 +673,12 @@ function updateLyricsProgress(audio, lyrics) {
                 if (editedLyrics[lyricEl.id]) {
                     delete editedLyrics[lyricEl.id];
                     lyricEl.classList.remove("editRecorded");
-                    updateEditLyricsNote();
+                    updateLyricSelectedLines();
                     return;
                 }
 
                 editedLyrics[lyricEl.id] = {text: lyric.text, at: audio.currentTime, position: parseInt(lyricEl.getAttribute("data-position"))};
-                updateEditLyricsNote();
+                updateLyricSelectedLines();
 
                 lyricEl.classList.add("editRecorded");
             }
@@ -726,26 +726,49 @@ function updateLyricsProgress(audio, lyrics) {
     }
 }
 
-function updateEditLyricsNote() {
-    const note = document.querySelector(".lyricsDisplay .note");
-    let text = "";
-    
-    if (lyricEditMode) {
-        text = `
-            EDIT MODE<br><br>
-            Right click lyrics to sync it to the current position in the song, right click again to undo selection.
-            
-            <!--<br><br>?? on lyrics to open a popup to edit the text.-->
-
-            <br><br>To save, either click the floppy disk button, or press CTRL+S.
-        `;
-    }
-    
+function updateLyricSelectedLines() {
     if (Object.values(editedLyrics).length === 0) {
         document.querySelectorAll(".lyricsDisplay .line").forEach(e => e.classList.remove("editRecorded"));
     }
+}
+function updateEditLyricsNote(lyricData) {
+    const note = document.querySelector(".lyricsDisplay .note");
+    updateLyricSelectedLines();
 
-    note.innerHTML = text;
+    if (!lyricEditMode) {
+        note.innerHTML = "";
+        return;
+    }
+    
+    note.innerHTML = `
+        EDIT MODE<br><br>
+        Right click lyrics to sync it to the current position in the song, right click again to undo selection.
+        
+        <!--<br><br>?? on lyrics to open a popup to edit the text.-->
+
+        <br><br>
+        Background colour: <input class="lyricColourInput" type="color"/> <a class="resetBtn" href="#">reset</a>
+
+        <br><br>To save, either click the floppy disk button, or press CTRL+S.
+    `;
+    
+    const colourInput = note.querySelector(".lyricColourInput");
+    const lines = document.querySelector(".lyricsDisplay .lyrics"); 
+
+    const rgb = lyricData.colour.replaceAll(" ", "").split(",");
+    const originalValue = rgbToHex(...rgb);
+    colourInput.value = originalValue;
+
+    colourInput.oninput = () => {
+        const col = hexToRgb(colourInput.value);
+        lines.style.backgroundColor = `rgba(${col.r}, ${col.g}, ${col.b}, 0.2)`;
+    }
+
+    const resetBtn = note.querySelector(".resetBtn");
+    resetBtn.onclick = () => {
+        colourInput.value = originalValue;
+        lines.style.backgroundColor = `rgba(${lyricData.colour}, 0.2)`;
+    }
 }
 
 /**
@@ -774,6 +797,10 @@ async function saveEditedLyrics(songId, existingLyrics) {
         return l;
     });
 
+    const colourInput = document.querySelector(".lyricColourInput");
+    const colour = hexToRgb(colourInput.value);
+    existingLyrics.colour = `${colour.r}, ${colour.g}, ${colour.b}`;
+
     await window.electronAPI.updateSongLyrics(songId, existingLyrics);
 
     showSmallMessage("Saved Lyrics!", 4000, "success", document.querySelector(".lyricsDisplay"));
@@ -794,4 +821,30 @@ function showSmallMessage(message, dismissAfter = 5000, type, parentContainer) {
     setTimeout(() => {
         el.remove();
     }, dismissAfter);
+}
+
+function toHex(num) {
+    const hex = parseInt(num).toString(16);
+    return (hex.length == 1) ? `0${hex}` : hex;
+}
+
+function rgbToHex(r, g, b) {
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    const obj = {
+        r: 0,
+        g: 0,
+        b: 0
+    }
+
+    if (result) {
+        obj.r = parseInt(result[1], 16);
+        obj.g = parseInt(result[2], 16);
+        obj.b = parseInt(result[3], 16);
+    }
+
+    return obj;
 }
