@@ -623,9 +623,15 @@ async function loadLyrics(song) {
         useAutoScroll = false;
         updateEditLyricsNote();
 
+        const save = () => {
+            saveEditedLyrics(song.id);
+        }
+
+        saveBtn.onclick = save;
+
         // Add keybind to save.
         registerKeyBinds({
-            "ctrl-s": saveEditedLyrics                
+            "ctrl-s": save                
         });
     }
 
@@ -729,7 +735,7 @@ function updateEditLyricsNote() {
             EDIT MODE<br><br>
             Right click lyrics to sync it to the current position in the song, right click again to undo selection.
             
-            <br><br>?? on lyrics to open a popup to edit the text.
+            <!--<br><br>?? on lyrics to open a popup to edit the text.-->
 
             <br><br>To save, either click the floppy disk button, or press CTRL+S.
         `;
@@ -753,6 +759,34 @@ function formatLyricText(lyric) {
     return lyric;
 }
 
-function saveEditedLyrics() {
-    navigator.clipboard.writeText(JSON.stringify(Object.values(editedLyrics), null, 4));
+async function saveEditedLyrics(songId) {
+    // Sort lyrics by position, then delete it as to not include it in save files.
+    const lyrics = Object.values(editedLyrics)
+        .sort((a,b) => a.position - b.position)
+        .map(l => {
+            delete l.position;
+
+            return l;
+        });
+
+    await window.electronAPI.updateSongLyrics(songId, lyrics);
+
+    showSmallMessage("Saved Lyrics!", 4000, "success", document.querySelector(".lyricsDisplay"));
+}
+
+function showSmallMessage(message, dismissAfter = 5000, type, parentContainer) {
+    const el = document.createElement("div");
+    el.className = "smallTopMsg";
+    el.textContent = message;
+
+    if (!parentContainer) parentContainer = document.body;
+    parentContainer?.appendChild(el);
+
+    if (type) {
+        el.classList.add(type);
+    }
+
+    setTimeout(() => {
+        el.remove();
+    }, dismissAfter);
 }

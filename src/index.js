@@ -50,6 +50,7 @@ app.whenReady().then(() => {
     ipcMain.handle("data:newSong", newSong);
     ipcMain.handle("update:stashInfo", editStash);
     ipcMain.handle("data:getSongLyrics", getSongLyrics);
+    ipcMain.handle("data:updateSongLyrics", updateSongLyrics);
 
     mainAppWindow = createWindow();
 
@@ -192,4 +193,22 @@ async function getSongLyrics(e, id) {
     const songLyrics = lyrics[id];
     
     return songLyrics;
+}
+
+async function updateSongLyrics(e, songId, lyrics) {
+    const lyrics = await readAndParseJson(path.join(app.getAppPath(), "data/lyrics.json"), {});
+
+    const existing = lyrics[songId];
+    lyrics[songId] = lyrics;
+
+    // If there was original data, add back any data/keys that were not included in updated data.
+    if (existing) {
+        for (const [key, val] of Object.entries(existing)) {
+            if (!lyrics[songId][key]) {
+                lyrics[songId][key] = val;
+            }
+        }
+    }
+
+    return fs.promises.writeFile(path.join(app.getAppPath(), "data/lyrics.json"), JSON.stringify(stashes), "utf-8");
 }

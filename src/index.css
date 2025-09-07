@@ -466,3 +466,22 @@ hr {
 .reminder {
     color: var(--text_hint);
 }
+
+.smallTopMsg {
+    display: block;
+    margin: auto;
+    position: fixed;
+    top:10px;left:0;right:0;
+    background-color: var(--secondary);
+    width: fit-content;
+    height: fit-content;
+    padding: 6px 16px;
+}
+.smallTopMsg.success {
+    background-color: rgba(0, 85, 0);
+    color: rgb(0, 255, 0);
+}
+.smallTopMsg.error {
+    background-color: rgba(85, 0, 0, 1);
+    color: rgb(255, 0, 0);
+}
