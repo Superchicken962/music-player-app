@@ -580,13 +580,21 @@ async function loadLyrics(song) {
     if (!lyrics) {
         lyricsEl.innerHTML = `
             No Lyrics For This Song!<br>
-            Create some <a href="#">here</a>
+            Add lyrics <a class="addLyricsBtn" href="#">here</a>
         `;
         lyricsBtn.classList.add("none");
         lyricsEl.classList.add("none");
         editBtn.classList.add("hidden");
         currentlyPlaying.lyrics = null;
         lyricsEl.style.backgroundColor = `transparent`;
+        saveBtn.classList.add("hidden");
+        lyricEditMode = false;
+        updateEditLyricsNote();
+
+        lyricsEl.querySelector(".addLyricsBtn").onclick = () => {
+            loadEditLyricsPage(song);
+        }
+
         return;
     }
 
@@ -621,7 +629,7 @@ async function loadLyrics(song) {
         saveBtn.classList.remove("hidden");
         lyricEditMode = true;
         useAutoScroll = false;
-        updateEditLyricsNote(lyrics);
+        updateEditLyricsNote(lyrics, song);
 
         const save = () => {
             saveEditedLyrics(song.id, lyrics);
@@ -731,7 +739,7 @@ function updateLyricSelectedLines() {
         document.querySelectorAll(".lyricsDisplay .line").forEach(e => e.classList.remove("editRecorded"));
     }
 }
-function updateEditLyricsNote(lyricData) {
+function updateEditLyricsNote(lyricData, song) {
     const note = document.querySelector(".lyricsDisplay .note");
     updateLyricSelectedLines();
 
@@ -749,11 +757,16 @@ function updateEditLyricsNote(lyricData) {
         <br><br>
         Background colour: <input class="lyricColourInput" type="color"/> <a class="resetBtn" href="#">reset</a>
 
+        <br><br>
+        Or, edit the lyrics directly <a class="editPageBtn" href="#">here</a>
+
         <br><br>To save, either click the floppy disk button, or press CTRL+S.
     `;
     
     const colourInput = note.querySelector(".lyricColourInput");
     const lines = document.querySelector(".lyricsDisplay .lyrics"); 
+
+    lyricData.colour = (lyricData.colour || "255, 165, 0");
 
     const rgb = lyricData.colour.replaceAll(" ", "").split(",");
     const originalValue = rgbToHex(...rgb);
@@ -768,6 +781,11 @@ function updateEditLyricsNote(lyricData) {
     resetBtn.onclick = () => {
         colourInput.value = originalValue;
         lines.style.backgroundColor = `rgba(${lyricData.colour}, 0.2)`;
+    }
+
+    const editPageBtn = note.querySelector(".editPageBtn");
+    editPageBtn.onclick = () => {
+        loadEditLyricsPage(song, lyricData);
     }
 }
 
@@ -847,4 +865,139 @@ function hexToRgb(hex) {
     }
 
     return obj;
+}
+
+async function loadEditLyricsPage(song, lyrics, calledBack) {
+    hideLyricsPage("editLyrics");
+    const pageEl = document.querySelector(".editLyricsDisplay .content");
+    const title = document.querySelector(".editLyricsDisplay .title");
+    title.textContent = song.name;
+
+    // If song data is given, fetch lyrics using song id - and if it has not be called again from the other func.
+    if (!lyrics && !calledBack) {
+        lyrics = await window.electronAPI.getLyrics(song.id);
+    }
+
+    if (lyrics?.lyrics) {
+        loadExistingLyricsToEdit(song, lyrics.lyrics, pageEl);
+        return;
+    }
+
+    pageEl.innerHTML = `
+        <p class="reminder">
+            Lyrics should be separated by newlines.
+            <br>Use %m to show a music icon, indicating instrumental sections.
+        </p>
+
+        <textarea class="lyricsText" placeholder="Lyrics..."></textarea>
+
+        <a class="button success"><i class="fa fa-save fa-2x saveBtn"></i></a>
+    `;
+
+    const saveBtn = pageEl.querySelector(".saveBtn");
+    const save = async() => {
+        const text = pageEl.querySelector(".lyricsText");
+        const lyrics = text.value.split("\n").map(line => {
+            // Use large number for "at" rather than 0, so it doesn't start highlighted and try to scroll.
+            return { text: line, at: 900000 };
+        });
+
+        // Now save the new lyrics.
+        await window.electronAPI.updateSongLyrics(song.id, {
+            id: song.id,
+            colour: null,
+            lyrics
+        });
+        showSmallMessage("Saved Lyrics!", 4000, "success", document.querySelector(".editLyricsDisplay"));
+    }
+
+    saveBtn.onclick = save;
+    registerKeyBinds({
+        "ctrl-s": save
+    });
+}
+
+function loadExistingLyricsToEdit(song, lyrics, element) {
+    element.innerHTML = `
+        <p class="reminder">Use %m to show a music icon, indicating instrumental sections.</p>
+
+        <table class="lyricList">
+            <thead>
+                <tr>
+                    <th>Lyric</th>
+                    <th>At Seconds</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    `;
+
+    const table = element.querySelector(".lyricList");
+    const title = element.parentElement.querySelector(".title");
+    
+    title.innerHTML += `<a class="button right"><i class="fa fa-save saveBtn"></i></a>`;
+
+    const initElement = (row) => {
+        const addBelowBtn = row.querySelector(".addBelowBtn");
+        addBelowBtn.onclick = () => {
+            const el = row.cloneNode(true);
+
+            const textInp = el.querySelector(".lyricTextInput");
+
+            textInp.value = "-";
+
+            row.after(el);
+            textInp.select();
+            initElement(el);
+        }
+
+        const removeBtn = row.querySelector(".removeBtn");
+        removeBtn.onclick = () => {
+            row.remove();
+            
+            if (table.querySelectorAll("tr").length == 1) {
+                loadEditLyricsPage(song, lyrics, true);
+            }
+        }
+    }
+
+    for (const lyric of (lyrics)) {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td><input class="lyricTextInput" value="${lyric.text}"/></td>
+            <td><input class="atInput" value="${lyric.at}"/></td>
+            <td><a class="button success inline addBelowBtn">+</a></td>
+            <td><a class="button error inline removeBtn">-</a></td>
+        `;
+
+        initElement(row);
+
+        table.querySelector("tbody").appendChild(row);
+    }
+
+    const save = async() => {
+        const lyrics = [];
+
+        for (const el of element.querySelectorAll("tbody tr")) {
+            const text = el.querySelector(".lyricTextInput")?.value;
+            const at = el.querySelector(".atInput")?.value;
+
+            lyrics.push({ text, at: parseInt(at) });
+        }
+
+        await window.electronAPI.updateSongLyrics(song.id, {
+            id: song.id,
+            colour: null,
+            lyrics
+        });
+        showSmallMessage("Saved Lyrics!", 4000, "success", document.querySelector(".editLyricsDisplay"));
+    }
+
+    const saveBtn = title.querySelector(".button");
+    saveBtn.onclick = save;
+    registerKeyBinds({
+        "ctrl-s": save
+    });
 }

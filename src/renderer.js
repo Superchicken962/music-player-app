@@ -271,16 +271,12 @@ lyricsBtn.addEventListener("click", toggleLyricsPage);
 const lyricsPageEl = document.querySelector(".lyricsDisplay");
 
 function showLyricsPage() {
-    const stashEl = document.querySelector(".stashDisplay");
-    lyricsPageEl.classList.remove("hidden");
-    stashEl.classList.add("hidden");
     lyricsBtn.classList.add("selected");
+    changePage("lyrics");
 }
-function hideLyricsPage() {
-    const stashEl = document.querySelector(".stashDisplay");
+function hideLyricsPage(to = "stash") {
     lyricsBtn.classList.remove("selected");
-    lyricsPageEl.classList.add("hidden");
-    stashEl.classList.remove("hidden");
+    changePage(to);
 }
 function toggleLyricsPage() {
     const showPage = lyricsPageEl.classList.contains("hidden");
@@ -291,6 +287,19 @@ function toggleLyricsPage() {
     }
 
     hideLyricsPage();
+}
+
+function changePage(selected) {
+    const pages = ["main", "stash", "lyrics", "editLyrics"];
+    if (!pages.includes(selected)) return;
+
+    for (const page of pages) {
+        const el = document.querySelector(`.${page}Display`);
+        el?.classList?.add("hidden");
+    }
+
+    const sPage = document.querySelector(`.${selected}Display`);
+    sPage?.classList?.remove("hidden");
 }
 
 const createStashBtn = document.querySelector(".createStashBtn");

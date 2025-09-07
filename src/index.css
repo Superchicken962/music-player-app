@@ -124,12 +124,25 @@ body {
 .button.active {
     color: var(--selection);
 }
+.button.success {
+    background-color: rgb(0, 170, 0);
+}
+.button.success:hover {
+    background-color: rgb(0, 130, 0);
+}
+.button.error {
+    background-color: rgb(170, 0, 0);
+}
+.button.error:hover {
+    background-color: rgb(130, 0, 0);
+}
 
 hr {
     border: 1px solid var(--subtle);
 }
 
-.stashDisplay, .lyricsDisplay {
+/* Apply to all pages */
+.pageDisplay [class$="Display"] {
     margin-left: 15px;
 }
 
@@ -488,4 +501,13 @@ hr {
 
 .lyricColourInput {
     border: none;
+}
+
+.editLyricsDisplay .content {
+    margin-bottom: 100px;
+}
+
+.lyricsText {
+    width: 90%;
+    resize: vertical;
 }
