@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('node:path');
-const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo } = require('./lib/utils');
+const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate } = require('./lib/utils');
 const fs = require("node:fs");
 const discord = require("discord-rich-presence")("752848644721475596");
 
@@ -52,6 +52,7 @@ app.whenReady().then(() => {
     ipcMain.handle("data:getSongLyrics", getSongLyrics);
     ipcMain.handle("data:updateSongLyrics", updateSongLyrics);
     ipcMain.handle("data:getSongsWithLyrics", getSongsWithLyrics);
+    ipcMain.handle("update:audioTime", audioTimeUpdate);
 
     mainAppWindow = createWindow();
 

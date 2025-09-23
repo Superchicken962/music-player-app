@@ -18,6 +18,15 @@ class Queue {
     }
 
     /**
+     * Export songs ids from the queue.
+     * 
+     * @returns { Song[] }
+     */
+    export() {
+        return [...this.#songs];
+    }
+
+    /**
      * Empties the queue.
      */
     empty() {

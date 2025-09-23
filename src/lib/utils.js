@@ -118,9 +118,17 @@ async function downloadYoutubeVideo(url, fileName, outpath = "", onProgress) {
     });
 }
 
+/**
+ * Call this function when the audio time is updated / progressed - updates saved information about song.
+ */
+function audioTimeUpdate(e, data) {
+    console.log(data);
+}
+
 module.exports = {
     readAndParseJson,
     createRequiredFolders,
     getYoutubeVideoInfo,
-    downloadYoutubeVideo
+    downloadYoutubeVideo,
+    audioTimeUpdate
 };

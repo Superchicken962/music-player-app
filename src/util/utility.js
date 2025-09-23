@@ -31,7 +31,7 @@ function getNumberSuffix(num) {
 
 const mainQueue = new Queue();
 
-const currentlyPlaying = { stashId: null, songId: null, lyrics: null };
+const currentlyPlaying = { stashId: null, songId: null, song: null, lyrics: null };
 
 const isCurrentlyPlaying = (stashId, songId) => {
     return currentlyPlaying.stashId === stashId && currentlyPlaying.songId === songId;
@@ -70,6 +70,18 @@ function initAudioFunctions(audio) {
         progressBar.value = progress;
 
         updateLyricsProgress(audio, currentlyPlaying.lyrics);
+        
+        // Save song progress so when app is restarted, we can restore it.
+        const songProgress = {
+            stashId: currentlyPlaying.stashId,
+            song: currentlyPlaying.song,
+            seconds,
+            duration,
+            progress,
+            queue: mainQueue.export()
+        };
+        localStorage.setItem("currentSong", JSON.stringify(songProgress));
+        // window.electronAPI.updateAudioTime(songProgress);
 
         // Essentially update rich presence every ~10 seconds.
         if (timeI === 0) {
@@ -163,6 +175,7 @@ function initAudioFunctions(audio) {
 function setPlayingSong(stashId, song) {
     currentlyPlaying.stashId = stashId;
     currentlyPlaying.songId = song.id;
+    currentlyPlaying.song = song;
 
     const nameEl = document.querySelector(".audioPlayerBar .song .text .name");
     const artistEl = document.querySelector(".audioPlayerBar .song .text .artist");
@@ -1051,4 +1064,33 @@ async function copyLyricsModal(song, element) {
     });
 
     modal.show();
+}
+
+function getSavedCurrentSong() {
+    try {
+        return JSON.parse(localStorage.getItem("currentSong"));
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * @param { HTMLAudioElement } audio 
+ */
+function loadPreviouslySavedSong(audio) {
+    const savedSong = getSavedCurrentSong();
+    if (!savedSong) return;
+
+    console.log("Loading", savedSong);
+    reloadStash(savedSong.stashId);
+    
+    mainQueue.empty();
+    mainQueue.import(...savedSong.queue);
+    mainQueue.setPosition(savedSong.song);
+
+    audio.src = savedSong.song.path;
+    audio.currentTime = savedSong.seconds;
+    audio.volume = localStorage.getItem("volume") ?? 0.05;
+
+    setPlayingSong(savedSong.stashId, savedSong.song);
 }

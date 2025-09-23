@@ -35,7 +35,7 @@ async function updateStashList() {
         if (stash.isMain) continue;
 
         // Setup right click context menu using tippy.js.
-        const menu = tippy(el, {
+        const menu = tippy?.(el, {
             content: `
             <div class="context-menu">
                 <div class="menu-item delete">Delete</div>
@@ -79,7 +79,9 @@ async function updateStashList() {
         });
     }
 }
-updateStashList();
+updateStashList().then(() => {
+    loadPreviouslySavedSong(audio);
+});
 
 function deselectAllStashes() {
     for (const stash of document.querySelectorAll(".stashList .stashes .stash")) {
