@@ -162,12 +162,23 @@ async function updateSongInfo(e, songInfo) {
     });
 }
 
-function downloadVideoAudio(e, url, videoId) {
+async function downloadVideoAudio(e, url, videoId) {
+    mainAppWindow.setProgressBar(1, { mode: "paused" });
+
     const onProgress = (data) => {
+        // Send callback back to renderer.
         mainAppWindow.webContents.send("YTDownloadProgress", data);
+
+        // Update progress bar on app window icon.
+        mainAppWindow.setProgressBar(data.percent/100, { mode: "normal" });
     }
 
-    return downloadYoutubeVideo(url, `YT_${videoId}`, path.join(app.getAppPath(), "data/songs"), onProgress);
+    const p = await downloadYoutubeVideo(url, `YT_${videoId}`, path.join(app.getAppPath(), "data/songs"), onProgress);
+    
+    // Remove progress bar once done.
+    mainAppWindow.setProgressBar(-1);
+
+    return p;
 }
 
 async function newSong(e, song) {

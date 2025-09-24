@@ -386,8 +386,20 @@ function showImportPage() {
         <div class="section local hidden" data-for="local">
             <input class="fileInput" type="file" accept=".mp3" name="file"/>
 
-            <input id="localImportMoveFile" type="checkbox" name="localImportMoveFile"/>
-            <label for="localImportMoveFile">Move file to app directory</label>
+            <div class="block localImportDetails hidden">
+                <input id="songArtist" name="songArtist" value=""/>
+                <label for="songArtist">Artist</label>
+
+                <br>
+
+                <input id="songTitle" name="songTitle" value=""/>
+                <label for="songTitle">Song Name</label>
+            </div>
+
+            <div class="alert alert-warning">This will make a copy of the file, so modifying the original afterwards will have no effect!</div>
+
+            <!-- <input id="localImportMoveFile" type="checkbox" name="localImportMoveFile"/>
+            <label for="localImportMoveFile">Move file to app directory</label>  -->
 
             <br><br>
 
@@ -401,6 +413,8 @@ function showImportPage() {
 
             <a class="button inline solid download">Go</a>
         </div>
+
+        <div class="alert alert-error errorText"></div>
     `;
 
     // Handle selecting sections.
@@ -421,8 +435,49 @@ function showImportPage() {
         }
     }
 
-    // Handle importing both locally, and downloading youtube.
+    const errorDisplay = songs.querySelector(".errorText");
 
+    // Handle for importing locally.
+    const localImportBtn = songs.querySelector(".button.import");
+    const localImportFileUpload = songs.querySelector(".fileInput");
+    const importSongDetails = songs.querySelector(".localImportDetails");
+
+    const localSongTitle = importSongDetails.querySelector("input#songTitle");
+    const localArtist = importSongDetails.querySelector("input#songArtist");
+
+    // When file is uploaded, show inputs for artist & song.
+    localImportFileUpload.addEventListener("input", (e) => {
+        importSongDetails.classList.remove("hidden");
+
+        // TODO: in future, if we want to add support for multiple import then we need to change this.
+        const file = localImportFileUpload.files[0];
+
+        let songName = file.name.replace(".mp3", "");
+        let artistName = "";
+
+        // If dash is in name, assume format of Artist - Song name.
+        const parts = songName.split("-");
+        if (parts.length > 1) {
+            artistName = parts[0].trim();
+            songName = parts[1].trim();
+        }
+
+        localSongTitle.value = songName;
+        localArtist.value = artistName;
+    });
+
+    // When button is clicked, start importing song.
+    localImportBtn.addEventListener("click", (e) => {
+        const { songArtist, songTitle } = harvestInputs(importSongDetails);
+        if (!songArtist || !songTitle) {
+            errorDisplay.textContent = "Song must have a name and artist!";
+            return;
+        }
+
+        errorDisplay.textContent = "";
+    });
+
+    // Handle for downloading youtube.
     const downloadBtn = songs.querySelector(".button.download");
     downloadBtn.addEventListener("click", (e) => {
         downloadButtonClick(e, songs.querySelector(".section.download"));

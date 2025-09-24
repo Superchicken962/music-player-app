@@ -86,9 +86,13 @@ async function downloadYoutubeVideo(url, fileName, outpath = "", onProgress) {
     return new Promise(resolve => {
         const outputFile = path.join(outpath, `${fileName}.mp3`);
         const tempFile = path.join(outpath, `temp_${fileName}.mp3`);
-        
+
         // Download video and audion and log progress.
         ytdl(url, { quality: "highestaudio", filter: "audioonly" })
+        .on("error", (e) => {
+            // TODO: handle this better.
+            console.log("Error ytdl'ing youtube video:", e);
+        })
         .pipe(fs.createWriteStream(tempFile))
         .on('finish', () => {
             const startTime = new Date();
@@ -112,6 +116,10 @@ async function downloadYoutubeVideo(url, fileName, outpath = "", onProgress) {
             .on('end', () => {
                 fs.unlinkSync(tempFile);
                 resolve(outputFile);
+            })
+            .on("error", (e) => {
+                // TODO: handle this better.
+                console.log("Error ffmpeg'ing youtube video:", e);
             })
             .run();
         });

@@ -517,3 +517,23 @@ hr {
     width: 90%;
     resize: vertical;
 }
+
+.alert {
+    display: inline-block;
+    margin: auto;
+    width: 90%;
+    padding: 4px 16px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-left: 4px solid rgb(255, 193, 7);
+}
+.alert-error {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-left: 4px solid rgb(220, 53, 69);
+}
+.alert:empty {
+    display: none;
+}
