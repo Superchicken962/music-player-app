@@ -1,8 +1,8 @@
 {
   "name": "music-player-app",
-  "productName": "music-player-app",
+  "productName": "MusicStash",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Local music player with option to download from youtube",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",
