@@ -249,7 +249,7 @@ async function playSong(song) {
         return false; 
     }
 
-    audio.volume = localStorage.getItem("volume") ?? 0.05;
+    loadAudioSavedOptions(audio);
     loadLyrics(song);
     return true;
 }

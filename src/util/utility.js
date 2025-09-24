@@ -27,6 +27,8 @@ function getNumberSuffix(num) {
  * Audio options from initAudioFunctions.
  * @typedef { Object } InitAudioFunctionOptions
  * @property { Function } togglePause - Toggle pause on the song.
+ * @property { (rate: float) => void } setPlaybackRate - Set playback rate of the audio.
+ * @property { (opt: boolean) => void } setPreservesPitch - Set whether pitch should be preserved when changing playback rate.
  */
 
 const mainQueue = new Queue();
@@ -150,6 +152,24 @@ function initAudioFunctions(audio) {
     }
     volumeEl.value = (localStorage.getItem("volume") ?? 0.5) * 100;
 
+    const setPlaybackRate = (rate) => {
+        audio.playbackRate = parseFloat(rate);
+        localStorage.setItem("playbackRate", parseFloat(rate));
+
+        const el = document.querySelector(".audioPlayerBar .speed input");
+        el.value = rate;
+
+        const display = document.querySelector(".audioPlayerBar .speed .display");
+        display.textContent = `x${rate}`;
+    };
+
+    // Handle speed/playback rate
+    const speedEl = document.querySelector(".audioPlayerBar .speed input");
+    speedEl.oninput = () => {
+        const speed = speedEl.value;
+        setPlaybackRate(speed);
+    }
+
     const togglePause = () => {
         if (!currentlyPlaying.songId) return;
 
@@ -164,7 +184,12 @@ function initAudioFunctions(audio) {
     playBtn.onclick = togglePause;
 
     return {
-        togglePause
+        togglePause,
+        setPlaybackRate,
+        setPreservesPitch: (preserves) => {
+            audio.preservesPitch = !!preserves;
+            localStorage.setItem("preservesPitch", !!preserves);
+        }
     };
 }
 
@@ -205,6 +230,7 @@ function nextSong(audio) {
 
     deselectPlayingSongs();
     setPlayingSong(currentlyPlaying.stashId, nextSong);
+    loadAudioSavedOptions(audio);
 
     mainQueue.next()
     loadLyrics(nextSong);
@@ -1090,7 +1116,17 @@ function loadPreviouslySavedSong(audio) {
 
     audio.src = savedSong.song.path;
     audio.currentTime = savedSong.seconds;
-    audio.volume = localStorage.getItem("volume") ?? 0.05;
+    loadAudioSavedOptions(audio);
 
     setPlayingSong(savedSong.stashId, savedSong.song);
+}
+
+/**
+ * Loads saved options onto audio - such as: volume, speed, etc.
+ * @param { HTMLAudioElement } audio 
+ */
+function loadAudioSavedOptions(audio) {
+    audio.volume = localStorage.getItem("volume") ?? 0.05;
+    audioOptions.setPlaybackRate(localStorage.getItem("playbackRate") ?? 1);
+    audio.preservesPitch = (localStorage.getItem("preservesPitch") != "false");
 }
