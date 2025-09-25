@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('node:path');
-const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate } = require('./lib/utils');
+const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate, generateRandomTimestampId } = require('./lib/utils');
 const fs = require("node:fs");
 const discord = require("discord-rich-presence")("752848644721475596");
 
@@ -53,6 +53,7 @@ app.whenReady().then(() => {
     ipcMain.handle("data:updateSongLyrics", updateSongLyrics);
     ipcMain.handle("data:getSongsWithLyrics", getSongsWithLyrics);
     ipcMain.handle("update:audioTime", audioTimeUpdate);
+    ipcMain.handle("import:localSong", importLocalSong);
 
     mainAppWindow = createWindow();
 
@@ -173,11 +174,23 @@ async function downloadVideoAudio(e, url, videoId) {
         mainAppWindow.setProgressBar(data.percent/100, { mode: "normal" });
     }
 
-    const p = await downloadYoutubeVideo(url, `YT_${videoId}`, path.join(app.getAppPath(), "data/songs"), onProgress);
+    let p;
+
+    try {
+        p = await downloadYoutubeVideo(url, `YT_${videoId}`, path.join(app.getAppPath(), "data/songs"), onProgress);
+    } catch(e) {
+        // Show errored progress bar, then 3s later remove it.
+        mainAppWindow.setProgressBar(1, { mode: "error" });
+        setTimeout(() => {
+            mainAppWindow.setProgressBar(-1);
+        }, 3000);
+
+        throw e;
+    }
     
     // Remove progress bar once done.
     mainAppWindow.setProgressBar(-1);
-
+    
     return p;
 }
 
@@ -232,4 +245,12 @@ async function getSongsWithLyrics() {
 
     const songsWithLyrics = Object.values(songs).filter(s => !!lyricsData[s.id]);
     return songsWithLyrics;
+}
+
+async function importLocalSong(e, buffer) {
+    const fileName = generateRandomTimestampId();
+    const pth = path.join(app.getAppPath(), `data/songs/${fileName}.mp3`);
+
+    await fs.promises.writeFile(pth, Buffer.from(buffer));
+    return { path: pth, id: fileName };
 }

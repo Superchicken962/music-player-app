@@ -417,10 +417,14 @@ function showImportPage() {
         <div class="alert alert-error errorText"></div>
     `;
 
+    const errorDisplay = songs.querySelector(".errorText");
+    errorDisplay.className = "alert alert-error";
+
     // Handle selecting sections.
     const selectSection = (val) => {
         addClassToAll(".songs .section", "hidden");
         removeClassFromAll(`.songs .section[data-for=${val}]`, "hidden");
+        errorDisplay.textContent = "";
     }
 
     selectSection(currentlySelected);
@@ -434,8 +438,6 @@ function showImportPage() {
             selectSection(select.getAttribute("data-value"));
         }
     }
-
-    const errorDisplay = songs.querySelector(".errorText");
 
     // Handle for importing locally.
     const localImportBtn = songs.querySelector(".button.import");
@@ -464,6 +466,8 @@ function showImportPage() {
 
         localSongTitle.value = songName;
         localArtist.value = artistName;
+        localImportBtn.classList.remove("disabled");
+        errorDisplay.textContent = "";
     });
 
     // When button is clicked, start importing song.
@@ -474,7 +478,32 @@ function showImportPage() {
             return;
         }
 
+        localImportBtn.classList.add("disabled");
         errorDisplay.textContent = "";
+
+        const file = localImportFileUpload.files[0];
+        
+        const reader = new FileReader();
+
+        reader.onerror = (e) => {
+            errorDisplay.textContent = "Unable to read file!";
+        }
+
+        reader.onloadend = async(ev) => {
+            const arrayBuff = reader.result;
+
+            const { path, id } = await window.electronAPI.importSongFromBuffer(arrayBuff);
+
+            const newSong = new Song(id, songTitle, songArtist, path, {});
+            await window.electronAPI.newSong(newSong);
+
+            errorDisplay.className = "alert alert-success";
+            errorDisplay.textContent = "Successfully imported song!";
+
+            updateStashList();
+        }
+
+        reader.readAsArrayBuffer(file);
     });
 
     // Handle for downloading youtube.
@@ -493,14 +522,6 @@ async function downloadButtonClick(event, element) {
         // TODO: Show error/warning to page.
         console.warn("Invalid url!");
         return;
-    }
-    
-    const onProgress = (data) => {
-        console.log("progress", data);
-    }
-
-    const onComplete = (file) => {
-        console.log("done", file);
     }
 
     // Disable the button so it  can't be clicked again.
@@ -549,6 +570,8 @@ async function downloadButtonClick(event, element) {
     const progressBar = element.querySelector(".progressBar .bar");
     const progressText = element.querySelector(".progress .text");
     const progressMessage = element.querySelector(".progress .message");
+    const errorDisplay = element.parentElement.querySelector(".errorText");
+    errorDisplay.className = "alert alert-error";
 
     // Listen for download progress - show it on page.
     window.electronAPI.listenFor("YTDownloadProgress", (data) => {
@@ -564,8 +587,17 @@ async function downloadButtonClick(event, element) {
         downloadBtn.classList.add("disabled");
 
         const fields = harvestInputs(element);
+        let path;
 
-        const path = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
+        try {
+            path = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
+        } catch (error) {
+            errorDisplay.textContent = "An unknown error occured! Please try again later.";
+            progressBar.parentElement.parentElement.remove();
+            console.error("Error downloading youtube video:", error);
+            return;
+        }
+
         const newSong = new Song(videoInfo.id, fields["songTitle"], fields["songArtist"], path, {});
 
         await window.electronAPI.newSong(newSong);

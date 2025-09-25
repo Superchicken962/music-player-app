@@ -83,15 +83,14 @@ async function getYoutubeVideoInfo(url) {
  * @param { Function? } onProgress - Callback for progress updates.
  */
 async function downloadYoutubeVideo(url, fileName, outpath = "", onProgress) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const outputFile = path.join(outpath, `${fileName}.mp3`);
         const tempFile = path.join(outpath, `temp_${fileName}.mp3`);
 
         // Download video and audion and log progress.
         ytdl(url, { quality: "highestaudio", filter: "audioonly" })
         .on("error", (e) => {
-            // TODO: handle this better.
-            console.log("Error ytdl'ing youtube video:", e);
+            reject(e);
         })
         .pipe(fs.createWriteStream(tempFile))
         .on('finish', () => {
@@ -118,8 +117,7 @@ async function downloadYoutubeVideo(url, fileName, outpath = "", onProgress) {
                 resolve(outputFile);
             })
             .on("error", (e) => {
-                // TODO: handle this better.
-                console.log("Error ffmpeg'ing youtube video:", e);
+                reject(e);
             })
             .run();
         });
@@ -133,10 +131,23 @@ function audioTimeUpdate(e, data) {
     console.log(data);
 }
 
+/**
+ * Creates a string id based on the current timestamp, and a random number.
+ * 
+ * @returns { String }
+ */
+function generateRandomTimestampId() {
+    const date = new Date().valueOf().toString(36);
+    const random = Math.random().toString(36).substring(2);
+
+    return date + random;
+}
+
 module.exports = {
     readAndParseJson,
     createRequiredFolders,
     getYoutubeVideoInfo,
     downloadYoutubeVideo,
-    audioTimeUpdate
+    audioTimeUpdate,
+    generateRandomTimestampId
 };

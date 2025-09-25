@@ -534,6 +534,10 @@ hr {
     background-color: rgba(220, 53, 69, 0.2);
     border-left: 4px solid rgb(220, 53, 69);
 }
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-left: 4px solid rgb(40, 167, 69);
+}
 .alert:empty {
     display: none;
 }
