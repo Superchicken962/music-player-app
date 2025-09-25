@@ -27,6 +27,8 @@ function getNumberSuffix(num) {
  * Audio options from initAudioFunctions.
  * @typedef { Object } InitAudioFunctionOptions
  * @property { Function } togglePause - Toggle pause on the song.
+ * @property { (rate: float) => void } setPlaybackRate - Set playback rate of the audio.
+ * @property { (opt: boolean) => void } setPreservesPitch - Set whether pitch should be preserved when changing playback rate.
  */
 
 const mainQueue = new Queue();
@@ -150,6 +152,24 @@ function initAudioFunctions(audio) {
     }
     volumeEl.value = (localStorage.getItem("volume") ?? 0.5) * 100;
 
+    const setPlaybackRate = (rate) => {
+        audio.playbackRate = parseFloat(rate);
+        localStorage.setItem("playbackRate", parseFloat(rate));
+
+        const el = document.querySelector(".audioPlayerBar .speed input");
+        el.value = rate;
+
+        const display = document.querySelector(".audioPlayerBar .speed .display");
+        display.textContent = `x${rate}`;
+    };
+
+    // Handle speed/playback rate
+    const speedEl = document.querySelector(".audioPlayerBar .speed input");
+    speedEl.oninput = () => {
+        const speed = speedEl.value;
+        setPlaybackRate(speed);
+    }
+
     const togglePause = () => {
         if (!currentlyPlaying.songId) return;
 
@@ -164,7 +184,12 @@ function initAudioFunctions(audio) {
     playBtn.onclick = togglePause;
 
     return {
-        togglePause
+        togglePause,
+        setPlaybackRate,
+        setPreservesPitch: (preserves) => {
+            audio.preservesPitch = !!preserves;
+            localStorage.setItem("preservesPitch", !!preserves);
+        }
     };
 }
 
@@ -205,6 +230,7 @@ function nextSong(audio) {
 
     deselectPlayingSongs();
     setPlayingSong(currentlyPlaying.stashId, nextSong);
+    loadAudioSavedOptions(audio);
 
     mainQueue.next()
     loadLyrics(nextSong);
@@ -363,8 +389,20 @@ function showImportPage() {
         <div class="section local hidden" data-for="local">
             <input class="fileInput" type="file" accept=".mp3" name="file"/>
 
-            <input id="localImportMoveFile" type="checkbox" name="localImportMoveFile"/>
-            <label for="localImportMoveFile">Move file to app directory</label>
+            <div class="block localImportDetails hidden">
+                <input id="songArtist" name="songArtist" value=""/>
+                <label for="songArtist">Artist</label>
+
+                <br>
+
+                <input id="songTitle" name="songTitle" value=""/>
+                <label for="songTitle">Song Name</label>
+            </div>
+
+            <div class="alert alert-warning">This will make a copy of the file, so modifying the original afterwards will have no effect!</div>
+
+            <!-- <input id="localImportMoveFile" type="checkbox" name="localImportMoveFile"/>
+            <label for="localImportMoveFile">Move file to app directory</label>  -->
 
             <br><br>
 
@@ -378,12 +416,18 @@ function showImportPage() {
 
             <a class="button inline solid download">Go</a>
         </div>
+
+        <div class="alert alert-error errorText"></div>
     `;
+
+    const errorDisplay = songs.querySelector(".errorText");
+    errorDisplay.className = "errorText alert alert-error";
 
     // Handle selecting sections.
     const selectSection = (val) => {
         addClassToAll(".songs .section", "hidden");
         removeClassFromAll(`.songs .section[data-for=${val}]`, "hidden");
+        errorDisplay.textContent = "";
     }
 
     selectSection(currentlySelected);
@@ -398,8 +442,75 @@ function showImportPage() {
         }
     }
 
-    // Handle importing both locally, and downloading youtube.
+    // Handle for importing locally.
+    const localImportBtn = songs.querySelector(".button.import");
+    const localImportFileUpload = songs.querySelector(".fileInput");
+    const importSongDetails = songs.querySelector(".localImportDetails");
 
+    const localSongTitle = importSongDetails.querySelector("input#songTitle");
+    const localArtist = importSongDetails.querySelector("input#songArtist");
+
+    // When file is uploaded, show inputs for artist & song.
+    localImportFileUpload.addEventListener("input", (e) => {
+        importSongDetails.classList.remove("hidden");
+
+        // TODO: in future, if we want to add support for multiple import then we need to change this.
+        const file = localImportFileUpload.files[0];
+
+        let songName = file.name.replace(".mp3", "");
+        let artistName = "";
+
+        // If dash is in name, assume format of Artist - Song name.
+        const parts = songName.split("-");
+        if (parts.length > 1) {
+            artistName = parts[0].trim();
+            songName = parts[1].trim();
+        }
+
+        localSongTitle.value = songName;
+        localArtist.value = artistName;
+        localImportBtn.classList.remove("disabled");
+        errorDisplay.textContent = "";
+    });
+
+    // When button is clicked, start importing song.
+    localImportBtn.addEventListener("click", (e) => {
+        const { songArtist, songTitle } = harvestInputs(importSongDetails);
+        if (!songArtist || !songTitle) {
+            errorDisplay.className = "errorText alert alert-error";
+            errorDisplay.textContent = "Song must have a name and artist!";
+            return;
+        }
+
+        localImportBtn.classList.add("disabled");
+        errorDisplay.textContent = "";
+
+        const file = localImportFileUpload.files[0];
+        
+        const reader = new FileReader();
+
+        reader.onerror = (e) => {
+            errorDisplay.textContent = "Unable to read file!";
+        }
+
+        reader.onloadend = async(ev) => {
+            const arrayBuff = reader.result;
+
+            const { path, id } = await window.electronAPI.importSongFromBuffer(arrayBuff);
+
+            const newSong = new Song(id, songTitle, songArtist, path, {});
+            await window.electronAPI.newSong(newSong);
+
+            errorDisplay.className = "errorText alert alert-success";
+            errorDisplay.textContent = "Successfully imported song!";
+
+            updateStashList();
+        }
+
+        reader.readAsArrayBuffer(file);
+    });
+
+    // Handle for downloading youtube.
     const downloadBtn = songs.querySelector(".button.download");
     downloadBtn.addEventListener("click", (e) => {
         downloadButtonClick(e, songs.querySelector(".section.download"));
@@ -415,14 +526,6 @@ async function downloadButtonClick(event, element) {
         // TODO: Show error/warning to page.
         console.warn("Invalid url!");
         return;
-    }
-    
-    const onProgress = (data) => {
-        console.log("progress", data);
-    }
-
-    const onComplete = (file) => {
-        console.log("done", file);
     }
 
     // Disable the button so it  can't be clicked again.
@@ -471,6 +574,8 @@ async function downloadButtonClick(event, element) {
     const progressBar = element.querySelector(".progressBar .bar");
     const progressText = element.querySelector(".progress .text");
     const progressMessage = element.querySelector(".progress .message");
+    const errorDisplay = element.parentElement.querySelector(".errorText");
+    errorDisplay.className = "errorText alert alert-error";
 
     // Listen for download progress - show it on page.
     window.electronAPI.listenFor("YTDownloadProgress", (data) => {
@@ -486,8 +591,17 @@ async function downloadButtonClick(event, element) {
         downloadBtn.classList.add("disabled");
 
         const fields = harvestInputs(element);
+        let path;
 
-        const path = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
+        try {
+            path = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
+        } catch (error) {
+            errorDisplay.textContent = "An unknown error occured! Please try again later.";
+            progressBar.parentElement.parentElement.remove();
+            console.error("Error downloading youtube video:", error);
+            return;
+        }
+
         const newSong = new Song(videoInfo.id, fields["songTitle"], fields["songArtist"], path, {});
 
         await window.electronAPI.newSong(newSong);
@@ -1093,7 +1207,20 @@ function loadPreviouslySavedSong(audio) {
 
     audio.src = savedSong.song.path;
     audio.currentTime = savedSong.seconds;
-    audio.volume = localStorage.getItem("volume") ?? 0.05;
+    loadAudioSavedOptions(audio);
 
     setPlayingSong(savedSong.stashId, savedSong.song);
+}
+
+/**
+ * Loads saved options onto audio - such as: volume, speed, etc.
+ * @param { HTMLAudioElement } audio 
+ */
+function loadAudioSavedOptions(audio) {
+    audio.volume = localStorage.getItem("volume") ?? 0.05;
+    audioOptions.setPlaybackRate(localStorage.getItem("playbackRate") ?? 1);
+
+    // Set this to be false for now, until an option to toggle it is added to the ui.
+    // audio.preservesPitch = (localStorage.getItem("preservesPitch") != "false");
+    audio.preservesPitch = false;
 }

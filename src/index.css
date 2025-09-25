@@ -54,7 +54,7 @@ body {
     background-color: var(--secondary);
     border-radius: 10px;
     /* max-width: 400px; */
-    height: 100%;
+    height: calc(100% - 80px);
     overflow-y: auto;
 }
 .stashList h2 {
@@ -201,8 +201,8 @@ hr {
         'audioDetails audioControl audioControl volume'
         'audioDetails audioProgress audioProgress volume';
     grid-template-columns: 0.25fr 0.25fr 0.25fr 0.25fr;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
+    /* border-top-left-radius: 15px;
+    border-top-right-radius: 15px; */
     width: 100%;
     min-width: 0;
     min-height: 0;
@@ -516,4 +516,28 @@ hr {
 .lyricsText {
     width: 90%;
     resize: vertical;
+}
+
+.alert {
+    display: inline-block;
+    margin: auto;
+    width: 90%;
+    padding: 4px 16px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-left: 4px solid rgb(255, 193, 7);
+}
+.alert-error {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-left: 4px solid rgb(220, 53, 69);
+}
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.2);
+    border-left: 4px solid rgb(40, 167, 69);
+}
+.alert:empty {
+    display: none;
 }
