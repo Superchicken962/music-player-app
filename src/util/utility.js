@@ -1216,5 +1216,8 @@ function loadPreviouslySavedSong(audio) {
 function loadAudioSavedOptions(audio) {
     audio.volume = localStorage.getItem("volume") ?? 0.05;
     audioOptions.setPlaybackRate(localStorage.getItem("playbackRate") ?? 1);
-    audio.preservesPitch = (localStorage.getItem("preservesPitch") != "false");
+
+    // Set this to be false for now, until an option to toggle it is added to the ui.
+    // audio.preservesPitch = (localStorage.getItem("preservesPitch") != "false");
+    audio.preservesPitch = false;
 }
