@@ -54,7 +54,7 @@ body {
     background-color: var(--secondary);
     border-radius: 10px;
     /* max-width: 400px; */
-    height: 100%;
+    height: calc(100% - 80px);
     overflow-y: auto;
 }
 .stashList h2 {
@@ -201,8 +201,8 @@ hr {
         'audioDetails audioControl audioControl volume'
         'audioDetails audioProgress audioProgress volume';
     grid-template-columns: 0.25fr 0.25fr 0.25fr 0.25fr;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
+    /* border-top-left-radius: 15px;
+    border-top-right-radius: 15px; */
     width: 100%;
     min-width: 0;
     min-height: 0;

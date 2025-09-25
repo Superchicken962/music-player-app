@@ -418,7 +418,7 @@ function showImportPage() {
     `;
 
     const errorDisplay = songs.querySelector(".errorText");
-    errorDisplay.className = "alert alert-error";
+    errorDisplay.className = "errorText alert alert-error";
 
     // Handle selecting sections.
     const selectSection = (val) => {
@@ -474,6 +474,7 @@ function showImportPage() {
     localImportBtn.addEventListener("click", (e) => {
         const { songArtist, songTitle } = harvestInputs(importSongDetails);
         if (!songArtist || !songTitle) {
+            errorDisplay.className = "errorText alert alert-error";
             errorDisplay.textContent = "Song must have a name and artist!";
             return;
         }
@@ -497,7 +498,7 @@ function showImportPage() {
             const newSong = new Song(id, songTitle, songArtist, path, {});
             await window.electronAPI.newSong(newSong);
 
-            errorDisplay.className = "alert alert-success";
+            errorDisplay.className = "errorText alert alert-success";
             errorDisplay.textContent = "Successfully imported song!";
 
             updateStashList();
@@ -571,7 +572,7 @@ async function downloadButtonClick(event, element) {
     const progressText = element.querySelector(".progress .text");
     const progressMessage = element.querySelector(".progress .message");
     const errorDisplay = element.parentElement.querySelector(".errorText");
-    errorDisplay.className = "alert alert-error";
+    errorDisplay.className = "errorText alert alert-error";
 
     // Listen for download progress - show it on page.
     window.electronAPI.listenFor("YTDownloadProgress", (data) => {
