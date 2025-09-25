@@ -1,2 +1,2 @@
-# music-player-app
-Music player app that also allows for downloading songs directly
+# MusicStash
+Simple music player app that allows for downloading songs from youtube, or importing from file.
