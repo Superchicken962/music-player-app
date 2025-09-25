@@ -50,7 +50,7 @@ module.exports = {
           name: 'music-player-app'
         },
         prerelease: false,
-        draft: true
+        draft: false
       }
     }
   ]
