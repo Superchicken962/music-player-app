@@ -375,14 +375,11 @@ function showImportPage() {
     const songs = display.querySelector(".songs");
     songs.classList.add("importSongs");
 
-    // Only show youtube section until local is done.
-
-    // const currentlySelected = (localStorage.getItem("importSectionSelected") ?? "local");
-    const currentlySelected = "youtube";
+    const currentlySelected = (localStorage.getItem("importSectionSelected") ?? "local");
 
     songs.innerHTML = `
         <div class="sectionSelect">
-            <!-- <a class="${(currentlySelected==="local") ? "selected" : ""}" data-value="local">Local Import</a> -->
+            <a class="${(currentlySelected==="local") ? "selected" : ""}" data-value="local">Local Import</a>
             <a class="${(currentlySelected==="local") ? "" : "selected"}" data-value="download">YouTube Download</a>
         </div>
 
@@ -400,9 +397,6 @@ function showImportPage() {
             </div>
 
             <div class="alert alert-warning">This will make a copy of the file, so modifying the original afterwards will have no effect!</div>
-
-            <!-- <input id="localImportMoveFile" type="checkbox" name="localImportMoveFile"/>
-            <label for="localImportMoveFile">Move file to app directory</label>  -->
 
             <br><br>
 
