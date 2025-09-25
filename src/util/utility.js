@@ -1195,7 +1195,6 @@ function loadPreviouslySavedSong(audio) {
     const savedSong = getSavedCurrentSong();
     if (!savedSong) return;
 
-    console.log("Loading", savedSong);
     reloadStash(savedSong.stashId);
     
     mainQueue.empty();
