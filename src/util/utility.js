@@ -127,9 +127,6 @@ function initAudioFunctions(audio) {
         playBtn.setAttribute("data-state", "playing");
         playBtn.innerHTML = `<i class="fa fa-pause"></i>`;
         updateSongInfo(audio);
-
-        // Set progress bar to 0 to prevent it going to 50% for a split second.
-        progressBar.value = 0;
     }
 
     audio.onpause = () => {
@@ -143,11 +140,16 @@ function initAudioFunctions(audio) {
         const isLast = mainQueue.isFinalSong();
 
         nextSong(audio);
-        
+
         // TODO: If repeat is enabled, autoplay.
         if (isLast) return;
 
         audio.play();
+    }
+
+    // When audio changes, set progress bar to 0 to prevent it going to 50% for a split second.
+    audio.onloadstart = () => {
+        progressBar.value = 0;
     }
 
     // Handle volume.
@@ -156,7 +158,7 @@ function initAudioFunctions(audio) {
         const volume = volumeEl.value/100;
 
         localStorage.setItem("volume", volume);
-        audio.volume = volume
+        audio.volume = volume;
     }
     volumeEl.value = (localStorage.getItem("volume") ?? 0.5) * 100;
 
