@@ -127,6 +127,9 @@ function initAudioFunctions(audio) {
         playBtn.setAttribute("data-state", "playing");
         playBtn.innerHTML = `<i class="fa fa-pause"></i>`;
         updateSongInfo(audio);
+
+        // Set progress bar to 0 to prevent it going to 50% for a split second.
+        progressBar.value = 0;
     }
 
     audio.onpause = () => {

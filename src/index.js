@@ -74,20 +74,7 @@ app.on('window-all-closed', () => {
     }
 });
 
-createRequiredFolders(app.getPath("userData"), ["data/songs", "data/songs.json", "data/stashes.json", "data/lyrics.json"]);
-
-(async() => {
-    const songs = await getSongs();
-    for (const [id, song] of Object.entries(songs)) {
-        if (song.path) {
-            const parts = song.path.split("\\");
-            const last = parts[parts.length-1];
-            song.fileName = last;
-        }
-    }
-
-    console.log("Reformatted songs data");
-})();
+createRequiredFolders(getUserDataPath(), ["data/songs", "data/songs.json", "data/stashes.json", "data/lyrics.json"]);
 
 /**
  * Get all stashes, including the master stash.
@@ -95,8 +82,8 @@ createRequiredFolders(app.getPath("userData"), ["data/songs", "data/songs.json",
  * @returns { Object[] }
  */
 async function getStashes() {
-    const stashes = await readAndParseJson(path.join(app.getPath("userData"), "data/stashes.json"), []);
-    const songs = await readAndParseJson(path.join(app.getPath("userData"), "data/songs.json"), {});
+    const stashes = await readAndParseJson(path.join(getUserDataPath(), "data/stashes.json"), []);
+    const songs = await readAndParseJson(path.join(getUserDataPath(), "data/songs.json"), {});
 
     // Add "master" stash to start.
     stashes.unshift({
@@ -116,19 +103,19 @@ async function getStashes() {
  * @returns { Promise<Object[]> }
  */
 async function getSongs() {
-    const songs = await readAndParseJson(path.join(app.getPath("userData"), "data/songs.json"), {});
+    const songs = await readAndParseJson(path.join(getUserDataPath(), "data/songs.json"), {});
     return songs;
 }
 
 async function newStash(e, stash) {
-    const stashes = await readAndParseJson(path.join(app.getPath("userData"), "data/stashes.json"), []);
+    const stashes = await readAndParseJson(path.join(getUserDataPath(), "data/stashes.json"), []);
     stashes.push(stash);
 
-    return fs.promises.writeFile(path.join(app.getPath("userData"), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
+    return fs.promises.writeFile(path.join(getUserDataPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
 }
 
 async function deleteStash(e, id) {
-    const stashes = await readAndParseJson(path.join(app.getPath("userData"), "data/stashes.json"), []);
+    const stashes = await readAndParseJson(path.join(getUserDataPath(), "data/stashes.json"), []);
     const stashIndex = stashes.findIndex(s => s.id === id);
 
     // If stash isn't found, return.
@@ -138,11 +125,11 @@ async function deleteStash(e, id) {
 
     // Otherwise, remove the stash from the array and save.
     stashes.splice(stashIndex, 1);
-    return fs.promises.writeFile(path.join(app.getPath("userData"), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
+    return fs.promises.writeFile(path.join(getUserDataPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
 }
 
 async function addSongsToStash(e, stashId, songIds) {
-    const stashes = await readAndParseJson(path.join(app.getPath("userData"), "data/stashes.json"), []);
+    const stashes = await readAndParseJson(path.join(getUserDataPath(), "data/stashes.json"), []);
     const stash = stashes.find(s => s.id === stashId);
     if (!stash) return;
 
@@ -151,7 +138,7 @@ async function addSongsToStash(e, stashId, songIds) {
     stash.songs.push(...songIds);
 
     // Save the file with the modified stash.
-    return fs.promises.writeFile(path.join(app.getPath("userData"), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
+    return fs.promises.writeFile(path.join(getUserDataPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
 }
 
 async function updateSongInfo(e, songInfo) {
@@ -191,7 +178,7 @@ async function downloadVideoAudio(e, url, videoId) {
     const fileName = `YT_${videoId}`;
 
     try {
-        await downloadYoutubeVideo(url, fileName, path.join(app.getPath("userData"), "data/songs"), onProgress);
+        await downloadYoutubeVideo(url, fileName, path.join(getUserDataPath(), "data/songs"), onProgress);
     } catch(e) {
         // Show errored progress bar, then 3s later remove it.
         mainAppWindow.setProgressBar(1, { mode: "error" });
@@ -209,14 +196,14 @@ async function downloadVideoAudio(e, url, videoId) {
 }
 
 async function newSong(e, song) {
-    const songs = await readAndParseJson(path.join(app.getPath("userData"), "data/songs.json"), {});
+    const songs = await readAndParseJson(path.join(getUserDataPath(), "data/songs.json"), {});
     songs[song.id] = song;
 
-    return fs.promises.writeFile(path.join(app.getPath("userData"), "data/songs.json"), JSON.stringify(songs), "utf-8");
+    return fs.promises.writeFile(path.join(getUserDataPath(), "data/songs.json"), JSON.stringify(songs), "utf-8");
 }
 
 async function editStash(e, id, name, desc) {
-    const stashes = await readAndParseJson(path.join(app.getPath("userData"), "data/stashes.json"), []);
+    const stashes = await readAndParseJson(path.join(getUserDataPath(), "data/stashes.json"), []);
     const stash = stashes.find(s => s.id === id);
     if (!stash) return;
 
@@ -225,18 +212,18 @@ async function editStash(e, id, name, desc) {
     if (desc) stash.description = desc;
 
     // Save the file with the modified stash.
-    return fs.promises.writeFile(path.join(app.getPath("userData"), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
+    return fs.promises.writeFile(path.join(getUserDataPath(), "data/stashes.json"), JSON.stringify(stashes), "utf-8");
 }
 
 async function getSongLyrics(e, id) {
-    const lyrics = await readAndParseJson(path.join(app.getPath("userData"), "data/lyrics.json"), {});
+    const lyrics = await readAndParseJson(path.join(getUserDataPath(), "data/lyrics.json"), {});
     const songLyrics = lyrics[id];
     
     return songLyrics;
 }
 
 async function updateSongLyrics(e, songId, lyrics) {
-    const lyricsData = await readAndParseJson(path.join(app.getPath("userData"), "data/lyrics.json"), {});
+    const lyricsData = await readAndParseJson(path.join(getUserDataPath(), "data/lyrics.json"), {});
 
     const existing = lyricsData[songId];
     lyricsData[songId] = lyrics;
@@ -250,12 +237,12 @@ async function updateSongLyrics(e, songId, lyrics) {
         }
     }
 
-    return fs.promises.writeFile(path.join(app.getPath("userData"), "data/lyrics.json"), JSON.stringify(lyricsData, null, 4), "utf-8");
+    return fs.promises.writeFile(path.join(getUserDataPath(), "data/lyrics.json"), JSON.stringify(lyricsData, null, 4), "utf-8");
 }
 
 async function getSongsWithLyrics() {
-    const songs = await readAndParseJson(path.join(app.getPath("userData"), "data/songs.json"), {});
-    const lyricsData = await readAndParseJson(path.join(app.getPath("userData"), "data/lyrics.json"), {});
+    const songs = await readAndParseJson(path.join(getUserDataPath(), "data/songs.json"), {});
+    const lyricsData = await readAndParseJson(path.join(getUserDataPath(), "data/lyrics.json"), {});
 
     const songsWithLyrics = Object.values(songs).filter(s => !!lyricsData[s.id]);
     return songsWithLyrics;
@@ -263,12 +250,13 @@ async function getSongsWithLyrics() {
 
 async function importLocalSong(e, buffer) {
     const fileName = generateRandomTimestampId();
-    const pth = path.join(app.getPath("userData"), `data/songs/${fileName}.mp3`);
+    const pth = path.join(getUserDataPath(), `data/songs/${fileName}.mp3`);
 
     await fs.promises.writeFile(pth, Buffer.from(buffer));
     return { path: pth, id: fileName };
 }
 
 function getUserDataPath() {
-    return app.getPath("userData");
+    // If app is packaged (production), use user data folder in appdata. Otherwise (if development), use project directory.
+    return (app.isPackaged) ? app.getPath("userData") : path.join(__dirname, "../");
 }
