@@ -1,3 +1,8 @@
+let USER_DATA_PATH = "";
+(async() => {
+    USER_DATA_PATH = await window.electronAPI.getUserDataPath();
+})();
+
 /**
  * Get the appropriate suffix for a given number (i.e. rd for 3).
  * 
@@ -226,7 +231,7 @@ function nextSong(audio) {
     const nextSong = mainQueue.getNext();
 
     audio.currentTime = 0;
-    audio.src = nextSong.path;
+    audio.src = getSongPath(nextSong.fileName);
 
     deselectPlayingSongs();
     setPlayingSong(currentlyPlaying.stashId, nextSong);
@@ -493,9 +498,9 @@ function showImportPage() {
         reader.onloadend = async(ev) => {
             const arrayBuff = reader.result;
 
-            const { path, id } = await window.electronAPI.importSongFromBuffer(arrayBuff);
+            const { id } = await window.electronAPI.importSongFromBuffer(arrayBuff);
 
-            const newSong = new Song(id, songTitle, songArtist, path, {});
+            const newSong = new Song(id, songTitle, songArtist, `${id}.mp3`, {});
             await window.electronAPI.newSong(newSong);
 
             errorDisplay.className = "errorText alert alert-success";
@@ -588,10 +593,10 @@ async function downloadButtonClick(event, element) {
         downloadBtn.classList.add("disabled");
 
         const fields = harvestInputs(element);
-        let path;
+        let fileName;
 
         try {
-            path = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
+            fileName = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
         } catch (error) {
             errorDisplay.textContent = "An unknown error occured! Please try again later.";
             progressBar.parentElement.parentElement.remove();
@@ -599,7 +604,7 @@ async function downloadButtonClick(event, element) {
             return;
         }
 
-        const newSong = new Song(videoInfo.id, fields["songTitle"], fields["songArtist"], path, {});
+        const newSong = new Song(videoInfo.id, fields["songTitle"], fields["songArtist"], fileName, {});
 
         await window.electronAPI.newSong(newSong);
 
@@ -1201,7 +1206,7 @@ function loadPreviouslySavedSong(audio) {
     mainQueue.import(...savedSong.queue);
     mainQueue.setPosition(savedSong.song);
 
-    audio.src = savedSong.song.path;
+    audio.src = getSongPath(savedSong.song.fileName);
     audio.currentTime = savedSong.seconds;
     loadAudioSavedOptions(audio);
 
@@ -1219,4 +1224,8 @@ function loadAudioSavedOptions(audio) {
     // Set this to be false for now, until an option to toggle it is added to the ui.
     // audio.preservesPitch = (localStorage.getItem("preservesPitch") != "false");
     audio.preservesPitch = false;
+}
+
+function getSongPath(fileName) {
+    return `${USER_DATA_PATH}\\data\\songs\\${fileName}`;
 }

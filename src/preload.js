@@ -21,5 +21,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     updateSongLyrics: (songId, lyrics) => ipcRenderer.invoke("data:updateSongLyrics", songId, lyrics),
     getSongsWithLyrics: () => ipcRenderer.invoke("data:getSongsWithLyrics"),
     updateAudioTime: (data) => ipcRenderer.invoke("update:audioTime", data),
-    importSongFromBuffer: (buffer) => ipcRenderer.invoke("import:localSong", buffer)
+    importSongFromBuffer: (buffer) => ipcRenderer.invoke("import:localSong", buffer),
+    getUserDataPath: () => ipcRenderer.invoke("get:userDataPath")
 });
