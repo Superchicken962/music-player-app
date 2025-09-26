@@ -5,14 +5,14 @@ class Song {
      * @param { String } id - Unique song id.
      * @param { String } name - Song name.
      * @param { String } artist - Song artist.
-     * @param { String } path - Path to audio file.
+     * @param { String } fileName - Name of the audio file.
      * @param { SongMetadata } metadata - Additional information about the song.
      */
-    constructor(id, name, artist, path, metadata) {
+    constructor(id, name, artist, fileName, metadata) {
         this.id = id;
         this.name = name;
         this.artist = artist;
-        this.path = path;
+        this.fileName = fileName;
         this.metadata = metadata;
     }
 

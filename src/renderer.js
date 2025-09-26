@@ -242,7 +242,7 @@ async function playSong(song) {
 
     // TODO: Add queues.
     try {
-        audio.src = song.path;
+        audio.src = getSongPath(song.fileName);
         await audio.play();
     } catch (error) {
         console.log(`Unable to play song '${song.name}'!`);
