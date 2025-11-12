@@ -46,7 +46,7 @@ app.whenReady().then(() => {
     ipcMain.handle("update:songInfo", updateSongInfo);
     ipcMain.handle("update:stashSongs", addSongsToStash);
     ipcMain.handle("download:youtubeAudio", downloadVideoAudio);
-    ipcMain.handle("get:youtubeVideoInfo", (e, url) => { return getYoutubeVideoInfo(url); });
+    ipcMain.handle("get:youtubeVideoInfo", (e, id) => { return getYoutubeVideoInfo(id); });
     ipcMain.handle("data:newSong", newSong);
     ipcMain.handle("update:stashInfo", editStash);
     ipcMain.handle("data:getSongLyrics", getSongLyrics);
@@ -164,7 +164,7 @@ async function updateSongInfo(e, songInfo) {
     });
 }
 
-async function downloadVideoAudio(e, url, videoId) {
+async function downloadVideoAudio(e, videoId) {
     mainAppWindow.setProgressBar(1, { mode: "paused" });
 
     const onProgress = (data) => {

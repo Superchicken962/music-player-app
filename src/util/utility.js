@@ -527,11 +527,25 @@ function showImportPage() {
 async function downloadButtonClick(event, element) {
     const values = harvestInputs(element);
     
+    const errorDisplay = element.parentElement.querySelector(".errorText");
+    errorDisplay.className = "errorText alert alert-error";
+    errorDisplay.textContent = "";
+
+    let videoId;
     try {
-        const s = new URL(values.url);
+        const urlObj = new URL(values.url);
+        // If hostname is not youtube, or youtu.be then throw error saying it is invalid.
+        if (!(urlObj.hostname.includes("youtube") || urlObj.hostname.includes("youtu.be"))) {
+            throw new Error("Non YouTube URL Provided!");
+        }
+
+        videoId = urlObj.searchParams.get("v");
+        if (!videoId) {
+            throw new Error("Video Not Specified!");
+        }
+
     } catch (error) {
-        // TODO: Show error/warning to page.
-        console.warn("Invalid url!");
+        errorDisplay.textContent = "Please enter a valid YouTube URL!";
         return;
     }
 
@@ -541,7 +555,18 @@ async function downloadButtonClick(event, element) {
         <p>Loading YouTube Video...</p>
     `;
 
-    const videoInfo = await window.electronAPI.getYoutubeVideoInfo(values.url);
+    let videoInfo;
+    try {
+        videoInfo = await window.electronAPI.getYoutubeVideoInfo(videoId);
+    } catch(e) {
+        element.innerHTML = "";
+        errorDisplay.innerHTML = "Error fetching video information. <a href='#' class='link tryAgainBtn'>Try again</a>";
+        errorDisplay.querySelector(".tryAgainBtn").onclick = () => {
+            showImportPage();
+        }
+        return;
+    }
+    
     console.log(videoInfo);
 
     element.innerHTML = `
@@ -581,15 +606,11 @@ async function downloadButtonClick(event, element) {
     const progressBar = element.querySelector(".progressBar .bar");
     const progressText = element.querySelector(".progress .text");
     const progressMessage = element.querySelector(".progress .message");
-    const errorDisplay = element.parentElement.querySelector(".errorText");
-    errorDisplay.className = "errorText alert alert-error";
 
     // Listen for download progress - show it on page.
     window.electronAPI.listenFor("YTDownloadProgress", (data) => {
         progressBar.style.width = `${data.percent}%`;
         progressText.textContent = `${data.percent}%`;
-
-        console.log("Progress!", data);
     });
 
     const downloadBtn = element.querySelector(".button.download");
