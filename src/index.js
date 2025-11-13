@@ -49,7 +49,7 @@ app.whenReady().then(() => {
     ipcMain.handle("update:songInfo", updateSongInfo);
     ipcMain.handle("update:stashSongs", addSongsToStash);
     ipcMain.handle("download:youtubeAudio", downloadVideoAudio);
-    ipcMain.handle("get:youtubeVideoInfo", (e, url) => { return getYoutubeVideoInfo(url); });
+    ipcMain.handle("get:youtubeVideoInfo", (e, id) => { return getYoutubeVideoInfo(id); });
     ipcMain.handle("data:newSong", newSong);
     ipcMain.handle("update:stashInfo", editStash);
     ipcMain.handle("data:getSongLyrics", getSongLyrics);
@@ -167,7 +167,7 @@ async function updateSongInfo(e, songInfo) {
     });
 }
 
-async function downloadVideoAudio(e, url, videoId) {
+async function downloadVideoAudio(e, videoId, quality) {
     mainAppWindow.setProgressBar(1, { mode: "paused" });
 
     const onProgress = (data) => {
@@ -178,10 +178,10 @@ async function downloadVideoAudio(e, url, videoId) {
         mainAppWindow.setProgressBar(data.percent/100, { mode: "normal" });
     }
 
-    const fileName = `YT_${videoId}`;
+    fileName = `YT_${videoId}`;
 
     try {
-        await downloadYoutubeVideo(url, fileName, path.join(getUserDataPath(), "data/songs"), onProgress);
+        fileName = await downloadYoutubeVideo(videoId, fileName, path.join(getUserDataPath(), "data/songs"), onProgress, quality);
     } catch(e) {
         // Show errored progress bar, then 3s later remove it.
         mainAppWindow.setProgressBar(1, { mode: "error" });

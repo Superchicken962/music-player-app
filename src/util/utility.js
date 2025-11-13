@@ -524,11 +524,25 @@ function showImportPage() {
 async function downloadButtonClick(event, element) {
     const values = harvestInputs(element);
     
+    const errorDisplay = element.parentElement.querySelector(".errorText");
+    errorDisplay.className = "errorText alert alert-error";
+    errorDisplay.textContent = "";
+
+    let videoId;
     try {
-        const s = new URL(values.url);
+        const urlObj = new URL(values.url);
+        // If hostname is not youtube, or youtu.be then throw error saying it is invalid.
+        if (!(urlObj.hostname.includes("youtube") || urlObj.hostname.includes("youtu.be"))) {
+            throw new Error("Non YouTube URL Provided!");
+        }
+
+        videoId = urlObj.searchParams.get("v");
+        if (!videoId) {
+            throw new Error("Video Not Specified!");
+        }
+
     } catch (error) {
-        // TODO: Show error/warning to page.
-        console.warn("Invalid url!");
+        errorDisplay.textContent = "Please enter a valid YouTube URL!";
         return;
     }
 
@@ -538,7 +552,18 @@ async function downloadButtonClick(event, element) {
         <p>Loading YouTube Video...</p>
     `;
 
-    const videoInfo = await window.electronAPI.getYoutubeVideoInfo(values.url);
+    let videoInfo;
+    try {
+        videoInfo = await window.electronAPI.getYoutubeVideoInfo(videoId);
+    } catch(e) {
+        element.innerHTML = "";
+        errorDisplay.innerHTML = "Error fetching video information. <a href='#' class='link tryAgainBtn'>Try again</a>";
+        errorDisplay.querySelector(".tryAgainBtn").onclick = () => {
+            showImportPage();
+        }
+        return;
+    }
+    
     console.log(videoInfo);
 
     element.innerHTML = `
@@ -559,6 +584,17 @@ async function downloadButtonClick(event, element) {
                 <label for="songTitle">Song Name</label>
             </div>
 
+            <!--<div class="block formats">
+                <label for="qualitySelect">Audio Quality</label>
+                <select id="qualitySelect" name="qualitySelect">
+                    <option value="best">Best</option>
+                    ${ videoInfo.audioFormats.map(f => {
+                        console.log(f);
+                        return `<option value="${f.itag}">${f.qualityName} • ${f.bitrate}</option>`;
+                    }).join("") }
+                </select>
+            </div>-->
+
             <a class="button inline solid cancel">Cancel</a>
             <a class="button inline solid download">Download</a>
         </div>
@@ -578,15 +614,11 @@ async function downloadButtonClick(event, element) {
     const progressBar = element.querySelector(".progressBar .bar");
     const progressText = element.querySelector(".progress .text");
     const progressMessage = element.querySelector(".progress .message");
-    const errorDisplay = element.parentElement.querySelector(".errorText");
-    errorDisplay.className = "errorText alert alert-error";
 
     // Listen for download progress - show it on page.
     window.electronAPI.listenFor("YTDownloadProgress", (data) => {
         progressBar.style.width = `${data.percent}%`;
         progressText.textContent = `${data.percent}%`;
-
-        console.log("Progress!", data);
     });
 
     const downloadBtn = element.querySelector(".button.download");
@@ -598,7 +630,8 @@ async function downloadButtonClick(event, element) {
         let fileName;
 
         try {
-            fileName = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
+            const { name } =await window.electronAPI.downloadYoutubeAudio(videoInfo.id, fields.qualitySelect);
+            fileName = name;
         } catch (error) {
             errorDisplay.textContent = "An unknown error occured! Please try again later.";
             progressBar.parentElement.parentElement.remove();
@@ -609,10 +642,6 @@ async function downloadButtonClick(event, element) {
         const newSong = new Song(videoInfo.id, fields["songTitle"], fields["songArtist"], fileName, {});
 
         await window.electronAPI.newSong(newSong);
-
-        // element.innerHTML = `
-        //     Download complete!
-        // `;
 
         progressBar.style.width = "100%";
         progressText.textContent = "100%";
@@ -652,7 +681,7 @@ function addClassToAll(selector, className) {
 function harvestInputs(container) {
     const vals = {};
     
-    for (const inp of container.querySelectorAll("input")) {
+    for (const inp of container.querySelectorAll("input, select")) {
         if (!inp.name) continue;
 
         vals[inp.name] = inp.value;
