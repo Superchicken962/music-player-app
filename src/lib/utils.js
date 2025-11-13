@@ -106,18 +106,72 @@ async function getYoutubeVideoInfo(vidId) {
 /**
  * Downloads a youtube video as mp3.
  * 
- * @param { String } url - Video url.
+ * @param { String } videoId - Video id.
  * @param { String } fileName - File name to save as.
  * @param { String? } outpath - Path to save file to.
  * @param { Function? } onProgress - Callback for progress updates.
- * @param { String | Number } quality - Default = best.
+ * @param { Number } format - Optional itag format
  */
-async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress, quality = "best") {
-    return new Promise((resolve, reject) => {
+async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress, format) {
+    return new Promise(async(resolve, reject) => {
         const outputFile = path.join(outpath, `${fileName}.mp3`);
         const tempFile = path.join(outpath, `temp_${fileName}.mp3`);
 
-        // Download video and audion and log progress.
+        const innertube = await getInnertube();
+        // Consider if we add video playback in the future, then this function could be split with one for audio and one for video.
+
+        let dlStream;
+        try {
+            const info = await innertube.getBasicInfo(videoId);
+            const audioFormat = info.chooseFormat({ type: "audio" });
+
+            // TODO: Figure out how quality / format works - not working atm so just disable for now.
+            // dlStream = await innertube.download(videoId, { quality: "bestaudio", type: "audio", codec: "opus", format: "any" });
+            dlStream = await innertube.download(videoId, { type: "audio", format: audioFormat });
+        } catch (e) {
+            reject(e);
+            return;
+        }
+
+        const writeStream = fs.createWriteStream(tempFile);
+
+        writeStream.on("finish", () => {
+            const startTime = new Date();
+
+            // Run ffmpeg after file is downloaded (convert to .mp3).
+            ffmpeg(tempFile)
+                .output(outputFile)
+                .on('progress', (progress) => {
+                    const percent = Math.floor(progress.percent);
+                    const timemark = progress.timemark;
+        
+                    // Estimate the remaining time using the elapsed time and percentage per progress mark.
+                    const elapsedTime = Date.now() - startTime;
+                    const timePerPercentProgress = (elapsedTime / progress.percent);
+                    const remainingPercent = 100 - percent;
+        
+                    const remainingSeconds = (timePerPercentProgress * remainingPercent)/1000;
+        
+                    console.log(`Progress: ${percent}% - Time: ${timemark} - Remaining: ${remainingSeconds.toFixed(2)}s`);
+                    onProgress?.({percent, elapsedTime, remainingPercent, remainingSeconds});
+                })
+                .on('end', () => {
+                    fs.unlinkSync(tempFile);
+                    resolve(outputFile);
+                })
+                .on("error", (e) => {
+                    reject(e);
+                })
+                .run();
+        });
+
+        writeStream.on("error", (e) => {
+            reject(e);
+        });
+
+        // Pipe download into write stream.
+        dlStream.pipeTo(writeStream);
+
         // ytdl(url, { quality: "highestaudio", filter: "audioonly" })
         // .on("error", (e) => {
         //     reject(e);
@@ -127,29 +181,29 @@ async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress,
         //     const startTime = new Date();
     
         //     ffmpeg(tempFile)
-        //     .output(outputFile)
-        //     .on('progress', (progress) => {
-        //         const percent = Math.floor(progress.percent);
-        //         const timemark = progress.timemark;
+            // .output(outputFile)
+            // .on('progress', (progress) => {
+            //     const percent = Math.floor(progress.percent);
+            //     const timemark = progress.timemark;
     
-        //         // Estimate the remaining time using the elapsed time and percentage per progress mark.
-        //         const elapsedTime = Date.now() - startTime;
-        //         const timePerPercentProgress = (elapsedTime / progress.percent);
-        //         const remainingPercent = 100 - percent;
+            //     // Estimate the remaining time using the elapsed time and percentage per progress mark.
+            //     const elapsedTime = Date.now() - startTime;
+            //     const timePerPercentProgress = (elapsedTime / progress.percent);
+            //     const remainingPercent = 100 - percent;
     
-        //         const remainingSeconds = (timePerPercentProgress * remainingPercent)/1000;
+            //     const remainingSeconds = (timePerPercentProgress * remainingPercent)/1000;
     
-        //         console.log(`Progress: ${percent}% - Time: ${timemark} - Remaining: ${remainingSeconds.toFixed(2)}s`);
-        //         onProgress?.({percent, elapsedTime, remainingPercent, remainingSeconds});
-        //     })
-        //     .on('end', () => {
-        //         fs.unlinkSync(tempFile);
-        //         resolve(outputFile);
-        //     })
-        //     .on("error", (e) => {
-        //         reject(e);
-        //     })
-        //     .run();
+            //     console.log(`Progress: ${percent}% - Time: ${timemark} - Remaining: ${remainingSeconds.toFixed(2)}s`);
+            //     onProgress?.({percent, elapsedTime, remainingPercent, remainingSeconds});
+            // })
+            // .on('end', () => {
+            //     fs.unlinkSync(tempFile);
+            //     resolve(outputFile);
+            // })
+            // .on("error", (e) => {
+            //     reject(e);
+            // })
+            // .run();
         // });
     });
 }

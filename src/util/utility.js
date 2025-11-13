@@ -587,7 +587,7 @@ async function downloadButtonClick(event, element) {
                 <label for="songTitle">Song Name</label>
             </div>
 
-            <div class="block formats">
+            <!--<div class="block formats">
                 <label for="qualitySelect">Audio Quality</label>
                 <select id="qualitySelect" name="qualitySelect">
                     <option value="best">Best</option>
@@ -596,7 +596,7 @@ async function downloadButtonClick(event, element) {
                         return `<option value="${f.itag}">${f.qualityName} • ${f.bitrate}</option>`;
                     }).join("") }
                 </select>
-            </div>
+            </div>-->
 
             <a class="button inline solid cancel">Cancel</a>
             <a class="button inline solid download">Download</a>
