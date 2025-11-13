@@ -110,8 +110,9 @@ async function getYoutubeVideoInfo(vidId) {
  * @param { String } fileName - File name to save as.
  * @param { String? } outpath - Path to save file to.
  * @param { Function? } onProgress - Callback for progress updates.
+ * @param { String | Number } quality - Default = best.
  */
-async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress) {
+async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress, quality = "best") {
     return new Promise((resolve, reject) => {
         const outputFile = path.join(outpath, `${fileName}.mp3`);
         const tempFile = path.join(outpath, `temp_${fileName}.mp3`);

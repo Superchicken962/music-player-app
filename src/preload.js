@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     deleteStash: (stashId) => ipcRenderer.invoke("data:deleteStash", stashId),
     updateSongInfo: (songInfo) => ipcRenderer.invoke("update:songInfo", songInfo),
     addSongsToStash: (stashId, songIds) => ipcRenderer.invoke("update:stashSongs", stashId, songIds),
-    downloadYoutubeAudio: (videoId, onProgress) => ipcRenderer.invoke("download:youtubeAudio", videoId, onProgress),
+    downloadYoutubeAudio: (videoId, quality, onProgress) => ipcRenderer.invoke("download:youtubeAudio", videoId, quality, onProgress),
     getYoutubeVideoInfo: (id) => ipcRenderer.invoke("get:youtubeVideoInfo", id),
     newSong: (song) => ipcRenderer.invoke("data:newSong", song),
 

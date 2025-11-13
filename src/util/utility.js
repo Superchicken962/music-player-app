@@ -587,6 +587,17 @@ async function downloadButtonClick(event, element) {
                 <label for="songTitle">Song Name</label>
             </div>
 
+            <div class="block formats">
+                <label for="qualitySelect">Audio Quality</label>
+                <select id="qualitySelect" name="qualitySelect">
+                    <option value="best">Best</option>
+                    ${ videoInfo.audioFormats.map(f => {
+                        console.log(f);
+                        return `<option value="${f.itag}">${f.qualityName} • ${f.bitrate}</option>`;
+                    }).join("") }
+                </select>
+            </div>
+
             <a class="button inline solid cancel">Cancel</a>
             <a class="button inline solid download">Download</a>
         </div>
@@ -622,7 +633,7 @@ async function downloadButtonClick(event, element) {
         let fileName;
 
         try {
-            fileName = await window.electronAPI.downloadYoutubeAudio(values.url, videoInfo.id);
+            fileName = await window.electronAPI.downloadYoutubeAudio(videoInfo.id, fields.qualitySelect);
         } catch (error) {
             errorDisplay.textContent = "An unknown error occured! Please try again later.";
             progressBar.parentElement.parentElement.remove();
@@ -676,7 +687,7 @@ function addClassToAll(selector, className) {
 function harvestInputs(container) {
     const vals = {};
     
-    for (const inp of container.querySelectorAll("input")) {
+    for (const inp of container.querySelectorAll("input, select")) {
         if (!inp.name) continue;
 
         vals[inp.name] = inp.value;
