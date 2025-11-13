@@ -1,7 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const ffmpeg = require("fluent-ffmpeg");
-const { Innertube, UniversalCache } = require("youtubei.js");
+const { Innertube, UniversalCache, Utils, ClientType } = require("youtubei.js");
 
 /**
  * Create/get innertube instance - with cache.
@@ -9,7 +9,7 @@ const { Innertube, UniversalCache } = require("youtubei.js");
  * @returns { Promise<Innertube> }
  */
 async function getInnertube() {
-    const innertube = await Innertube.create({ cache: new UniversalCache(true, "../.cache") });
+    const innertube = await Innertube.create({ cache: new UniversalCache(true, "../.cache"), client_type: ClientType.ANDROID });
     return innertube;
 }
 
@@ -75,7 +75,7 @@ async function getYoutubeVideoInfo(vidId) {
     const videoInfo = await innertube.getBasicInfo(vidId);
 
     const title = videoInfo.basic_info.title;
-    const author = videoInfo.basic_info.channel;
+    const author = { name: videoInfo.basic_info.author };
     const id = videoInfo.basic_info.id;
     const length = videoInfo.basic_info.duration;
     const description = videoInfo.basic_info.short_description;
@@ -122,12 +122,12 @@ async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress,
 
         let dlStream;
         try {
-            const info = await innertube.getBasicInfo(videoId);
-            const audioFormat = info.chooseFormat({ type: "audio" });
+            // const info = await innertube.getBasicInfo(videoId);
+            // const audioFormat = info.chooseFormat({ type: "audio" });
 
             // TODO: Figure out how quality / format works - not working atm so just disable for now.
             // dlStream = await innertube.download(videoId, { quality: "bestaudio", type: "audio", codec: "opus", format: "any" });
-            dlStream = await innertube.download(videoId, { type: "audio", format: audioFormat });
+            dlStream = await innertube.download(videoId, { type: "audio", quality: "best", format: "any" });
         } catch (e) {
             reject(e);
             return;
@@ -157,7 +157,7 @@ async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress,
                 })
                 .on('end', () => {
                     fs.unlinkSync(tempFile);
-                    resolve(outputFile);
+                    resolve({ path: outputFile, name: fileName + ".mp3"});
                 })
                 .on("error", (e) => {
                     reject(e);
@@ -169,8 +169,18 @@ async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress,
             reject(e);
         });
 
-        // Pipe download into write stream.
-        dlStream.pipeTo(writeStream);
+        // Write chunks from download stream into write stream.
+        try {
+            for await (const chunk of Utils.streamToIterable(dlStream)) {
+                writeStream.write(chunk);
+            }
+
+            writeStream.end();
+        } catch (e) {
+            console.log("Error downloading video audio:", e);
+            reject(e);
+            return;
+        }
 
         // ytdl(url, { quality: "highestaudio", filter: "audioonly" })
         // .on("error", (e) => {

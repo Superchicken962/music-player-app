@@ -175,10 +175,10 @@ async function downloadVideoAudio(e, videoId, quality) {
         mainAppWindow.setProgressBar(data.percent/100, { mode: "normal" });
     }
 
-    const fileName = `YT_${videoId}`;
+    fileName = `YT_${videoId}`;
 
     try {
-        await downloadYoutubeVideo(videoId, fileName, path.join(getUserDataPath(), "data/songs"), onProgress, quality);
+        fileName = await downloadYoutubeVideo(videoId, fileName, path.join(getUserDataPath(), "data/songs"), onProgress, quality);
     } catch(e) {
         // Show errored progress bar, then 3s later remove it.
         mainAppWindow.setProgressBar(1, { mode: "error" });

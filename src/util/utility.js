@@ -633,7 +633,8 @@ async function downloadButtonClick(event, element) {
         let fileName;
 
         try {
-            fileName = await window.electronAPI.downloadYoutubeAudio(videoInfo.id, fields.qualitySelect);
+            const { name } =await window.electronAPI.downloadYoutubeAudio(videoInfo.id, fields.qualitySelect);
+            fileName = name;
         } catch (error) {
             errorDisplay.textContent = "An unknown error occured! Please try again later.";
             progressBar.parentElement.parentElement.remove();
@@ -644,10 +645,6 @@ async function downloadButtonClick(event, element) {
         const newSong = new Song(videoInfo.id, fields["songTitle"], fields["songArtist"], fileName, {});
 
         await window.electronAPI.newSong(newSong);
-
-        // element.innerHTML = `
-        //     Download complete!
-        // `;
 
         progressBar.style.width = "100%";
         progressText.textContent = "100%";
