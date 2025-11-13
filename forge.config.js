@@ -44,4 +44,17 @@ module.exports = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'superchicken962',
+          name: 'music-player-app'
+        },
+        prerelease: false,
+        draft: true
+      }
+    }
+  ]
 };

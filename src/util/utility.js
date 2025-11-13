@@ -408,9 +408,6 @@ function showImportPage() {
 
             <div class="alert alert-warning">This will make a copy of the file, so modifying the original afterwards will have no effect!</div>
 
-            <!-- <input id="localImportMoveFile" type="checkbox" name="localImportMoveFile"/>
-            <label for="localImportMoveFile">Move file to app directory</label>  -->
-
             <br><br>
 
             <a class="button inline solid import">Import</a>
