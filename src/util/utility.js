@@ -65,8 +65,11 @@ function initAudioFunctions(audio) {
     audio.ontimeupdate = (event) => {
         const controlsEl = document.querySelector(".audioPlayerBar .controls");
 
-        const seconds = audio.currentTime;
-        const duration = audio.duration;
+        const playbackRate = audio.playbackRate ?? 1;
+
+        // Divide by playbackRate so that the times shown are accurate to the modified rate.
+        const seconds = audio.currentTime / playbackRate;
+        const duration = audio.duration / playbackRate;
         const progress = (seconds / duration) * 100;
 
         elapsedTime.textContent = `${Math.floor(seconds/60)}:${("0"+Math.floor(seconds)%60).slice(-2)}`;
