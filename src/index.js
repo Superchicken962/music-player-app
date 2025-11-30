@@ -72,14 +72,22 @@ app.whenReady().then(() => {
         {
             label: "Server",
             submenu: [
+                { label: "Start", click: () => {
+                    serverManager.startServer();
+                }},
+                { label: "Stop", click: () => {
+                    serverManager.stopServer();
+                }},
                 { label: "Manager", click: () => {
-                    serverManager.create();
+                    serverManager.createWindow();
                 }}
             ]
         },
         {
             label: "View",
             submenu: [
+                { label: "Reload", role: "reload" },
+                { label: "Dev tools", role: "toggleDevTools" },
                 { label: "Home", click: () => {
                     mainAppWindow.webContents.executeJavaScript("changePage('main')");
                 }},
