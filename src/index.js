@@ -1,10 +1,11 @@
 const { updateElectronApp } = require('update-electron-app')
 updateElectronApp();
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('node:path');
 const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate, generateRandomTimestampId } = require('./lib/utils');
 const fs = require("node:fs");
+const serverManager = require('./server');
 const discord = require("discord-rich-presence")("752848644721475596");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -60,6 +61,36 @@ app.whenReady().then(() => {
     ipcMain.handle("get:userDataPath", getUserDataPath);
 
     mainAppWindow = createWindow();
+
+    const menu = Menu.buildFromTemplate([
+        {
+            label: "File",
+            submenu: [
+                { label: "Exit", role: "quit" }
+            ]
+        },
+        {
+            label: "Server",
+            submenu: [
+                { label: "Manager", click: () => {
+                    serverManager.create();
+                }}
+            ]
+        },
+        {
+            label: "View",
+            submenu: [
+                { label: "Home", click: () => {
+                    mainAppWindow.webContents.executeJavaScript("changePage('main')");
+                }},
+                { label: "Import Song", click: () => {
+                    mainAppWindow.webContents.executeJavaScript("showImportPage()");
+                }}
+            ]
+        }
+    ]);
+
+    Menu.setApplicationMenu(menu);
 
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.

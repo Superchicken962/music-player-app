@@ -1,4 +1,5 @@
 const { BrowserWindow } = require("electron");
+const path = require('node:path');
 
 class ServerBrowserWindow {
     /** @type { BrowserWindow } */
@@ -11,16 +12,21 @@ class ServerBrowserWindow {
         if (this.#window !== null) return;
 
         this.#window = new BrowserWindow({
-            width: 320,
+            width: 620,
             height: 300,
-            minWidth: 320,
+            minWidth: 620,
             minHeight: 300,
             webPreferences: {
                 preload: path.join(__dirname, "server/serverPreload.js"),
             }
         });
 
-        mainWindow.loadFile(path.join(__dirname, "server/serverIndex.html"));
+        this.#window.loadFile(path.join(__dirname, "server/serverIndex.html"));
+
+        // When window is closed, set variable to null so it can be recreated next create() call.
+        this.#window.on("closed", () => {
+            this.#window = null;
+        });
 
         return this.#window;
     }
@@ -33,4 +39,5 @@ class ServerBrowserWindow {
     }
 }
 
-module.exports = new ServerBrowserWindow();
+const serverManager = new ServerBrowserWindow();
+module.exports = serverManager;
