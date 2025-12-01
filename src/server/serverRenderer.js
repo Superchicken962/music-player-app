@@ -1,3 +1,5 @@
+let updatedAlready = false;
+
 const logElement = document.querySelector(".serverLogs");
 const portInput = document.querySelector("#serverPort");
 
@@ -24,12 +26,23 @@ async function updateValues(serverInfo) {
         startBtn.removeAttribute("disabled");
         stopBtn.setAttribute("disabled", true);
     }
+
+    // For the first update, show previous logs.
+    if (!updatedAlready) {
+        const logs = await window.electronAPI.getServerLogs();
+        console.log(logs);
+    }
+
+    updatedAlready = true;
 }
 updateValues();
 
 // Handle showing logs from server.
-window.electronAPI.listenFor("server:log", (ev) => {
-    logElement.textContent += `\n[log]${JSON.stringify(ev)}`
+window.electronAPI.listenFor("server:log", (log) => {
+    logElement.textContent += `[${log.date.toLocaleTimeString()}] ${log.content}\n`;
+    
+    // Auto scroll to bottom on new log.
+    logElement.scrollTop = logElement.scrollHeight;
 });
 
 window.electronAPI.listenFor("server:statusChange", (ev, info) => {

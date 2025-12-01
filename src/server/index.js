@@ -14,8 +14,8 @@ class ServerManagerWindow extends ServerManager {
         if (this.#window !== null) return;
 
         this.#window = new BrowserWindow({
-            height: 300,
-            minHeight: 300,
+            height: 400,
+            minHeight: 400,
             maxWidth: 800,
             minWidth: 800,
             webPreferences: {
@@ -47,15 +47,22 @@ class ServerManagerWindow extends ServerManager {
     getWindow() {
         return this.#window;
     }
+
+    sendMessage(event, ...args) {
+        if (!this.#window) return;
+
+        this.#window.webContents.send(event, ...args);
+    }
 }
 
 const serverManager = new ServerManagerWindow();
 
-ipcMain.handle("server:getInfo", (ev) => {
-    return serverManager.getInfo();
-});
+serverManager.on("statusUpdate", (info) => serverManager.sendMessage("server:statusChange", info));
+serverManager.on("log", (info, log) => serverManager.sendMessage("server:log", log));
 
+ipcMain.handle("server:getInfo", serverManager.getInfo);
 ipcMain.handle("server:start", serverManager.startServer);
 ipcMain.handle("server:stop", serverManager.stopServer);
+ipcMain.handle("server:getLogs", serverManager.getLogs);
 
 module.exports = serverManager;

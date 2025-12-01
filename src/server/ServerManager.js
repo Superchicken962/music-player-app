@@ -31,6 +31,8 @@ class ServerManager {
         
         this.#callEvent("statusUpdate");
         this.#callEvent("start");
+
+        this.log({ date: new Date(), content: "Server Started" });
     }
 
     stopServer = () => {
@@ -38,6 +40,8 @@ class ServerManager {
 
         this.#callEvent("statusUpdate");
         this.#callEvent("stop");
+
+        this.log({ date: new Date(), content: "Server Stopped" });
     }
 
     /**
@@ -45,11 +49,11 @@ class ServerManager {
      * 
      * @returns { ServerConnection[] } 
      */
-    getConnections() {
+    getConnections = () => {
         return Object.values(this.#connections);
     }
 
-    getLogs() {
+    getLogs = () => {
         return JSON.parse(JSON.stringify(this.#logs));
     }
 
@@ -58,7 +62,7 @@ class ServerManager {
      * 
      * @returns { ServerInfo }
      */
-    getInfo() {
+    getInfo = () => {
         return {
             running: this.#running
         }
