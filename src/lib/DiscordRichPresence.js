@@ -82,6 +82,10 @@ class MusicRichPresence extends DiscordRichPresence {
             details: song.name,
             startTimestamp: start,
             endTimestamp: end,
+            timestamps: {
+                start: start,
+                end: end
+            },
             smallImageText: "MusicStash",
             largeImageText: (playbackRate != 1) ? `Listening at ${playbackRate}x speed on MusicStash` : "Listening on MusicStash",
             name: (opts.useArtistForName) ? song.artist : "MusicStash",
