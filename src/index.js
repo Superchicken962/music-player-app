@@ -90,8 +90,8 @@ app.whenReady().then(() => {
         {
             label: "View",
             submenu: [
-                { label: "Reload", role: "reload" },
-                { label: "Dev tools", role: "toggleDevTools" },
+                // { label: "Reload", role: "reload" },
+                // { label: "Dev tools", role: "toggleDevTools" },
                 { label: "Home", click: () => {
                     mainAppWindow.webContents.executeJavaScript("changePage('main');deselectAllStashes();");
                 }},

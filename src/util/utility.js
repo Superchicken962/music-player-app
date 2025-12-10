@@ -91,8 +91,9 @@ function initAudioFunctions(audio) {
         const songProgress = {
             stashId: currentlyPlaying.stashId,
             song: currentlyPlaying.song,
-            seconds,
-            duration,
+            // Ensure we save raw time & duration values - saving ones changed by playback rate will cause mass confusion among the code (probably).
+            seconds: audio.currentTime,
+            duration: audio.duration,
             progress,
             queue: mainQueue.export()
         };
