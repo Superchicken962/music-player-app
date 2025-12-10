@@ -136,13 +136,18 @@ function initAudioFunctions(audio) {
     audio.onplay = () => {
         playBtn.setAttribute("data-state", "playing");
         playBtn.innerHTML = `<i class="fa fa-pause"></i>`;
-        updateSongInfo(audio);
     }
 
     audio.onpause = () => {
         playBtn.innerHTML = `<i class="fa fa-play"></i>`;
         playBtn.setAttribute("data-state", "paused");
 
+        updateSongInfo(audio);
+    }
+
+    // Update song info once meta data is loaded, instead of on play.
+    // Do this since duration won't be available 'on play'.
+    audio.onloadedmetadata = () => {
         updateSongInfo(audio);
     }
 
@@ -252,7 +257,7 @@ function nextSong(audio) {
     setPlayingSong(currentlyPlaying.stashId, nextSong);
     loadAudioSavedOptions(audio);
 
-    mainQueue.next()
+    mainQueue.next();
     loadLyrics(nextSong);
 
     return wasLast;

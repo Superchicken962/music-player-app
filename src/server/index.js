@@ -64,5 +64,6 @@ ipcMain.handle("server:getInfo", serverManager.getInfo);
 ipcMain.handle("server:start", serverManager.startServer);
 ipcMain.handle("server:stop", serverManager.stopServer);
 ipcMain.handle("server:getLogs", serverManager.getLogs);
+ipcMain.handle("server:clearLogs", serverManager.clearLogs);
 
 module.exports = serverManager;

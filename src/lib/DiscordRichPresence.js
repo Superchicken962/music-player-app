@@ -60,6 +60,9 @@ class MusicRichPresence extends DiscordRichPresence {
      */
     setPlayingSong(song, opts = {}) {
         const playbackRate = song.playbackRate || 1;
+
+        // If duration is not a number, then do not try setting song.
+        if (isNaN(song.duration)) return;
         
         // Change position & duration according to playback rate.
         const position = song.position / playbackRate;

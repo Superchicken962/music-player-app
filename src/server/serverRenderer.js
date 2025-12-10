@@ -9,8 +9,10 @@ portInput.addEventListener("input", (ev) => {
 
 const startBtn = document.querySelector("#serverStartBtn");
 const stopBtn = document.querySelector("#serverStopBtn");
+const clearLogsBtn = document.querySelector("#clearLogsBtn");
 startBtn.addEventListener("click", window.electronAPI.startServer);
 stopBtn.addEventListener("click", window.electronAPI.stopServer);
+clearLogsBtn.addEventListener("click", window.electronAPI.clearServerLogs);
 
 async function updateValues(serverInfo) {
     portInput.value = (localStorage.getItem("serverPort") ?? 3000);

@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getServerInfo: () => ipcRenderer.invoke("server:getInfo"),
     startServer: () => ipcRenderer.invoke("server:start"),
     stopServer: () => ipcRenderer.invoke("server:stop"),
-    getServerLogs: () => ipcRenderer.invoke("server:getLogs")
+    getServerLogs: () => ipcRenderer.invoke("server:getLogs"),
+    clearServerLogs: () => ipcRenderer.invoke("server:clearLogs")
 });

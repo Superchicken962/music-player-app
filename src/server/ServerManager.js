@@ -54,7 +54,16 @@ class ServerManager {
     }
 
     getLogs = () => {
-        return JSON.parse(JSON.stringify(this.#logs));
+        const logs = JSON.parse(JSON.stringify(this.#logs));
+        return logs;
+    }
+
+    /**
+     * Clear server logs.
+     */
+    clearLogs = () => {
+        console.log(this.#logs);
+        this.#logs.length = 0;
     }
 
     /**

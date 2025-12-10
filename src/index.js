@@ -73,30 +73,30 @@ app.whenReady().then(() => {
                 { label: "Exit", role: "quit" }
             ]
         },
-        // {
-        //     label: "Server",
-        //     submenu: [
-        //         { label: "Start", click: () => {
-        //             serverManager.startServer();
-        //         }},
-        //         { label: "Stop", click: () => {
-        //             serverManager.stopServer();
-        //         }},
-        //         { label: "Manager", click: () => {
-        //             serverManager.createWindow();
-        //         }}
-        //     ]
-        // },
         {
             label: "View",
             submenu: [
-                // { label: "Reload", role: "reload" },
-                // { label: "Dev tools", role: "toggleDevTools" },
+                { label: "Reload", role: "reload" },
+                { label: "Dev tools", role: "toggleDevTools" },
                 { label: "Home", click: () => {
                     mainAppWindow.webContents.executeJavaScript("changePage('main');deselectAllStashes();");
                 }},
                 { label: "Import Song", click: () => {
                     mainAppWindow.webContents.executeJavaScript("showImportPage()");
+                }}
+            ]
+        },
+        {
+            label: "Server",
+            submenu: [
+                { label: "Start", click: () => {
+                    serverManager.startServer();
+                }},
+                { label: "Stop", click: () => {
+                    serverManager.stopServer();
+                }},
+                { label: "Manager", click: () => {
+                    serverManager.createWindow();
                 }}
             ]
         },
