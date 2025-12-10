@@ -387,6 +387,9 @@ async function initAddSongsModal(modal, stash, onSave) {
     modal.show();
 }
 function showImportPage() {
+    deselectAllStashes();
+    changePage("stash");
+
     const display = document.querySelector(".stashDisplay");
 
     display.querySelector(".title").textContent = "Import Songs";
@@ -1251,6 +1254,7 @@ function loadPreviouslySavedSong(audio) {
     loadAudioSavedOptions(audio);
 
     setPlayingSong(savedSong.stashId, savedSong.song);
+    handleAppVersion();
 }
 
 /**
@@ -1268,4 +1272,21 @@ function loadAudioSavedOptions(audio) {
 
 function getSongPath(fileName) {
     return `${USER_DATA_PATH}\\data\\songs\\${fileName}`;
+}
+
+/**
+ * Checks current app version. Updates if necessary, and shows home page if so incase any updates are shown there.
+ */
+async function handleAppVersion() {
+    const version = await window.electronAPI.getAppVersion();
+    const lastViewedVersion = localStorage.getItem("latestVersion");
+
+    // View home page if versions do not match.
+    if (lastViewedVersion !== version) {
+        changePage("main");
+        deselectAllStashes();
+    }
+    
+    // Update version.
+    localStorage.setItem("latestVersion", version);
 }

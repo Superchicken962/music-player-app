@@ -9,6 +9,7 @@ const serverManager = require('./server');
 const { MusicRichPresence } = require('./lib/DiscordRichPresence');
 const rpc = new MusicRichPresence();
 const electronStore = require('./lib/electronStore');
+const package = require("../package.json");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -61,6 +62,7 @@ app.whenReady().then(() => {
     ipcMain.handle("update:audioTime", audioTimeUpdate);
     ipcMain.handle("import:localSong", importLocalSong);
     ipcMain.handle("get:userDataPath", getUserDataPath);
+    ipcMain.handle("get:appVersion", () => { return package.version })
 
     mainAppWindow = createWindow();
 
@@ -71,17 +73,30 @@ app.whenReady().then(() => {
                 { label: "Exit", role: "quit" }
             ]
         },
+        // {
+        //     label: "Server",
+        //     submenu: [
+        //         { label: "Start", click: () => {
+        //             serverManager.startServer();
+        //         }},
+        //         { label: "Stop", click: () => {
+        //             serverManager.stopServer();
+        //         }},
+        //         { label: "Manager", click: () => {
+        //             serverManager.createWindow();
+        //         }}
+        //     ]
+        // },
         {
-            label: "Server",
+            label: "View",
             submenu: [
-                { label: "Start", click: () => {
-                    serverManager.startServer();
+                { label: "Reload", role: "reload" },
+                { label: "Dev tools", role: "toggleDevTools" },
+                { label: "Home", click: () => {
+                    mainAppWindow.webContents.executeJavaScript("changePage('main');deselectAllStashes();");
                 }},
-                { label: "Stop", click: () => {
-                    serverManager.stopServer();
-                }},
-                { label: "Manager", click: () => {
-                    serverManager.createWindow();
+                { label: "Import Song", click: () => {
+                    mainAppWindow.webContents.executeJavaScript("showImportPage()");
                 }}
             ]
         },
@@ -99,19 +114,6 @@ app.whenReady().then(() => {
                         checked: electronStore.get("discordRPC.enabled")
                     }
                 ]}
-            ]
-        },
-        {
-            label: "View",
-            submenu: [
-                { label: "Reload", role: "reload" },
-                { label: "Dev tools", role: "toggleDevTools" },
-                { label: "Home", click: () => {
-                    mainAppWindow.webContents.executeJavaScript("changePage('main')");
-                }},
-                { label: "Import Song", click: () => {
-                    mainAppWindow.webContents.executeJavaScript("showImportPage()");
-                }}
             ]
         }
     ]);

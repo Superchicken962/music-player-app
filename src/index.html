@@ -15,8 +15,9 @@
     <div class="main">
         <div class="stashList">
             <h2>My Stash</h2>
-            <div class="controls">
-                <a class="button createStashBtn">Create +</a>
+            <div class="controls center-content">
+                <a class="button inline createStashBtn">Create +</a>
+                <a class="button inline mainImportBtn" onclick="showImportPage()">Import Song</a>
             </div>
 
             <hr>
@@ -28,11 +29,20 @@
             <div class="mainTitle mainDisplay">
                 <h1>MusicStash 📦</h1>
                 <hr>
-                <p>Welcome to MusicStash!</p>
+                <h4>Welcome to MusicStash!</h4>
                 <p>
                     To get started, click the Master Stash on the left to open the view, and click the import button to start importing music!
                     From there, you can either choose a song from your files, or provide a youtube url to download.
                 </p>
+
+                <h4>What's new in v1.2.0</h4>
+                <ul class="versionChanges">
+                    <li>Added New Title Bar / Menu</li>
+                    <li>Added Discord Rich Presence (Enable in Settings -> Discord Rich Presence)</li>
+                    <li>Song Duration Now Changes Based on Playback Rate</li>
+                    <li>Added Extra 'Import Song' Button to Left Navbar for Convenience</li>
+                    <li>And More!</li>
+                </ul>
             </div>
 
             <div class="stashDisplay hidden">
