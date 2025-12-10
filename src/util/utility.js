@@ -45,7 +45,12 @@ const isCurrentlyPlaying = (stashId, songId) => {
 }
 
 function updateSongInfo(audio) {
-    window.electronAPI.updateSongInfo({...mainQueue.getCurrent(), duration: audio.duration, currentTime: audio.currentTime});   
+    window.electronAPI.updateSongInfo({
+        ...mainQueue.getCurrent(),
+        duration: audio.duration,
+        currentTime: audio.currentTime,
+        isPlaying: !audio.paused
+    });   
 }
 
 /**
@@ -136,7 +141,7 @@ function initAudioFunctions(audio) {
         playBtn.innerHTML = `<i class="fa fa-play"></i>`;
         playBtn.setAttribute("data-state", "paused");
 
-        window.electronAPI.updateSongInfo(null);
+        updateSongInfo(audio);
     }
 
     audio.onended = () => {

@@ -6,7 +6,9 @@ const path = require('node:path');
 const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate, generateRandomTimestampId } = require('./lib/utils');
 const fs = require("node:fs");
 const serverManager = require('./server');
-const discord = require("discord-rich-presence")("752848644721475596");
+const { DiscordRichPresence } = require('./lib/DiscordRichPresence');
+
+const rpc = new DiscordRichPresence();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -184,25 +186,28 @@ async function addSongsToStash(e, stashId, songIds) {
 }
 
 async function updateSongInfo(e, songInfo) {
-    // Hide rich presence if given null.
-    if (!songInfo) {
-        mainAppWindow.setTitle("MusicStash");
+    mainAppWindow.setTitle((songInfo.isPlaying) ? 
+        `${songInfo.artist} - ${songInfo.name}` :
+        "MusicStash"
+    );
+
+    console.log(songInfo);
+
+    const start = Math.floor(Date.now() / 1000) - Math.floor(songInfo.currentTime);
+    const end = start + Math.floor(songInfo.duration);
+
+    if (!songInfo.isPlaying) {
+        rpc.clearActivity();
         return;
     }
 
-    mainAppWindow.setTitle(`${songInfo.artist} - ${songInfo.name}`);
-    return;
-    
-    // console.log(songInfo);
-    discord.updatePresence({
+    rpc.setActivity({
         state: songInfo.name,
         type: 2,
         details: songInfo.artist,
-        startTimestamp: Date.now() - (songInfo.currentTime * 1000),
-        endTimestamp: Date.now() + ((songInfo.duration - songInfo.currentTime) * 1000),
-        largeImageKey: "na",
-        smallImageKey: "na",
-        instance: true
+        startTimestamp: start,
+        endTimestamp: end,
+        instance: false
     });
 }
 
