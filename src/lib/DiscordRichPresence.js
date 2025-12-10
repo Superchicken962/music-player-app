@@ -53,18 +53,36 @@ class MusicRichPresence extends DiscordRichPresence {
      * @param { String } song.artist - Song artist.
      * @param { Number } song.position - Current position in the song (in seconds).
      * @param { Number } song.duration - Duration of the song (in seconds).
+     * @param { Number? } song.playbackRate - Playback rate of song - will be used to adjust duration (def. 1).
+     * @param { Object } opts - Extra options
+     * @param { Boolean? } opts.includeGetButton - Should it include a button that links to the music stash website/download?
+     * @param { Boolean? } opts.useArtistForName - Should the song artist be used for the activity name. (i.e. It becomes 'Listening to *artist' rather than 'Listening to MusicStash')
      */
-    setPlayingSong(song) {
+    setPlayingSong(song, opts = {}) {
         const start = Math.floor(Date.now() / 1000) - Math.floor(song.position);
         const end = start + Math.floor(song.duration);
 
+        const buttons = [];
+        
+        if (opts.includeGetButton) {
+            buttons.push({
+                label: "Get MusicStash", url: "https://musicstash.app/"
+            });
+        }
+
         this.setActivity({
-            state: song.name,
+            state: song.artist,
             type: 2,
-            details: song.artist,
+            details: song.name,
             startTimestamp: start,
             endTimestamp: end,
-            instance: false
+            smallImageText: "MusicStash",
+            largeImageText: "Listening on MusicStash",
+            name: (opts.useArtistForName) ? song.artist : "MusicStash",
+            instance: false,
+            buttons,
+            url: "https://musicstash.app/",
+            largeImageUrl: "https://musicstash.app/",
         });
     }
 }

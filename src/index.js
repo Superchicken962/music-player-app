@@ -6,9 +6,9 @@ const path = require('node:path');
 const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate, generateRandomTimestampId } = require('./lib/utils');
 const fs = require("node:fs");
 const serverManager = require('./server');
-const { DiscordRichPresence } = require('./lib/DiscordRichPresence');
-
-const rpc = new DiscordRichPresence();
+const { MusicRichPresence } = require('./lib/DiscordRichPresence');
+const rpc = new MusicRichPresence();
+const electronStore = require('./lib/electronStore');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -83,6 +83,22 @@ app.whenReady().then(() => {
                 { label: "Manager", click: () => {
                     serverManager.createWindow();
                 }}
+            ]
+        },
+        {
+            label: "Settings",
+            submenu: [
+                { label: "Discord Rich Presence", submenu: [
+                    {
+                        label: "Enabled",
+                        type: "checkbox",
+                        click: (i) => {
+                            // Update preference when changed.
+                            electronStore.set("discordRPC.enabled", i.checked);
+                        },
+                        checked: electronStore.get("discordRPC.enabled")
+                    }
+                ]}
             ]
         },
         {
@@ -191,23 +207,24 @@ async function updateSongInfo(e, songInfo) {
         "MusicStash"
     );
 
-    console.log(songInfo);
+    const rpcEnabled = electronStore.get("discordRPC.enabled");
+    if (!rpcEnabled) return;
 
-    const start = Math.floor(Date.now() / 1000) - Math.floor(songInfo.currentTime);
-    const end = start + Math.floor(songInfo.duration);
-
+    // Clear activity if song is paused.
     if (!songInfo.isPlaying) {
         rpc.clearActivity();
         return;
     }
 
-    rpc.setActivity({
-        state: songInfo.name,
-        type: 2,
-        details: songInfo.artist,
-        startTimestamp: start,
-        endTimestamp: end,
-        instance: false
+    rpc.setPlayingSong({
+        name: songInfo.name,
+        artist: songInfo.artist,
+        duration: songInfo.duration,
+        position: songInfo.currentTime,
+        playbackRate: 1
+    }, {
+        includeGetButton: true,
+        useArtistForName: true
     });
 }
 

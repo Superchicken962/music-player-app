@@ -49,7 +49,8 @@ function updateSongInfo(audio) {
         ...mainQueue.getCurrent(),
         duration: audio.duration,
         currentTime: audio.currentTime,
-        isPlaying: !audio.paused
+        isPlaying: !audio.paused,
+        playbackRate: audio.playbackRate
     });   
 }
 
