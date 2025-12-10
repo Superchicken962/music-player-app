@@ -181,40 +181,6 @@ async function downloadYoutubeVideo(videoId, fileName, outpath = "", onProgress,
             reject(e);
             return;
         }
-
-        // ytdl(url, { quality: "highestaudio", filter: "audioonly" })
-        // .on("error", (e) => {
-        //     reject(e);
-        // })
-        // .pipe(fs.createWriteStream(tempFile))
-        // .on('finish', () => {
-        //     const startTime = new Date();
-    
-        //     ffmpeg(tempFile)
-            // .output(outputFile)
-            // .on('progress', (progress) => {
-            //     const percent = Math.floor(progress.percent);
-            //     const timemark = progress.timemark;
-    
-            //     // Estimate the remaining time using the elapsed time and percentage per progress mark.
-            //     const elapsedTime = Date.now() - startTime;
-            //     const timePerPercentProgress = (elapsedTime / progress.percent);
-            //     const remainingPercent = 100 - percent;
-    
-            //     const remainingSeconds = (timePerPercentProgress * remainingPercent)/1000;
-    
-            //     console.log(`Progress: ${percent}% - Time: ${timemark} - Remaining: ${remainingSeconds.toFixed(2)}s`);
-            //     onProgress?.({percent, elapsedTime, remainingPercent, remainingSeconds});
-            // })
-            // .on('end', () => {
-            //     fs.unlinkSync(tempFile);
-            //     resolve(outputFile);
-            // })
-            // .on("error", (e) => {
-            //     reject(e);
-            // })
-            // .run();
-        // });
     });
 }
 

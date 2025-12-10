@@ -1,11 +1,15 @@
 const { updateElectronApp } = require('update-electron-app')
 updateElectronApp();
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('node:path');
 const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate, generateRandomTimestampId } = require('./lib/utils');
 const fs = require("node:fs");
-const discord = require("discord-rich-presence")("752848644721475596");
+const serverManager = require('./server');
+const { MusicRichPresence } = require('./lib/DiscordRichPresence');
+const rpc = new MusicRichPresence();
+const electronStore = require('./lib/electronStore');
+const package = require("../package.json");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -58,8 +62,63 @@ app.whenReady().then(() => {
     ipcMain.handle("update:audioTime", audioTimeUpdate);
     ipcMain.handle("import:localSong", importLocalSong);
     ipcMain.handle("get:userDataPath", getUserDataPath);
+    ipcMain.handle("get:appVersion", () => { return package.version })
 
     mainAppWindow = createWindow();
+
+    const menu = Menu.buildFromTemplate([
+        {
+            label: "File",
+            submenu: [
+                { label: "Exit", role: "quit" }
+            ]
+        },
+        // {
+        //     label: "Server",
+        //     submenu: [
+        //         { label: "Start", click: () => {
+        //             serverManager.startServer();
+        //         }},
+        //         { label: "Stop", click: () => {
+        //             serverManager.stopServer();
+        //         }},
+        //         { label: "Manager", click: () => {
+        //             serverManager.createWindow();
+        //         }}
+        //     ]
+        // },
+        {
+            label: "View",
+            submenu: [
+                // { label: "Reload", role: "reload" },
+                // { label: "Dev tools", role: "toggleDevTools" },
+                { label: "Home", click: () => {
+                    mainAppWindow.webContents.executeJavaScript("changePage('main');deselectAllStashes();");
+                }},
+                { label: "Import Song", click: () => {
+                    mainAppWindow.webContents.executeJavaScript("showImportPage()");
+                }}
+            ]
+        },
+        {
+            label: "Settings",
+            submenu: [
+                { label: "Discord Rich Presence", submenu: [
+                    {
+                        label: "Enabled",
+                        type: "checkbox",
+                        click: (i) => {
+                            // Update preference when changed.
+                            electronStore.set("discordRPC.enabled", i.checked);
+                        },
+                        checked: electronStore.get("discordRPC.enabled")
+                    }
+                ]}
+            ]
+        }
+    ]);
+
+    Menu.setApplicationMenu(menu);
 
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -145,25 +204,29 @@ async function addSongsToStash(e, stashId, songIds) {
 }
 
 async function updateSongInfo(e, songInfo) {
-    // Hide rich presence if given null.
-    if (!songInfo) {
-        mainAppWindow.setTitle("MusicStash");
+    mainAppWindow.setTitle((songInfo.isPlaying) ? 
+        `${songInfo.artist} - ${songInfo.name}` :
+        "MusicStash"
+    );
+
+    const rpcEnabled = electronStore.get("discordRPC.enabled");
+    if (!rpcEnabled) return;
+
+    // Clear activity if song is paused.
+    if (!songInfo.isPlaying) {
+        rpc.clearActivity();
         return;
     }
 
-    mainAppWindow.setTitle(`${songInfo.artist} - ${songInfo.name}`);
-    return;
-    
-    // console.log(songInfo);
-    discord.updatePresence({
-        state: songInfo.name,
-        type: 2,
-        details: songInfo.artist,
-        startTimestamp: Date.now() - (songInfo.currentTime * 1000),
-        endTimestamp: Date.now() + ((songInfo.duration - songInfo.currentTime) * 1000),
-        largeImageKey: "na",
-        smallImageKey: "na",
-        instance: true
+    rpc.setPlayingSong({
+        name: songInfo.name,
+        artist: songInfo.artist,
+        duration: songInfo.duration,
+        position: songInfo.currentTime,
+        playbackRate: songInfo.playbackRate
+    }, {
+        includeGetButton: true,
+        useArtistForName: true
     });
 }
 

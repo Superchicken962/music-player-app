@@ -45,7 +45,13 @@ const isCurrentlyPlaying = (stashId, songId) => {
 }
 
 function updateSongInfo(audio) {
-    window.electronAPI.updateSongInfo({...mainQueue.getCurrent(), duration: audio.duration, currentTime: audio.currentTime});   
+    window.electronAPI.updateSongInfo({
+        ...mainQueue.getCurrent(),
+        duration: audio.duration,
+        currentTime: audio.currentTime,
+        isPlaying: !audio.paused,
+        playbackRate: audio.playbackRate
+    });   
 }
 
 /**
@@ -65,8 +71,11 @@ function initAudioFunctions(audio) {
     audio.ontimeupdate = (event) => {
         const controlsEl = document.querySelector(".audioPlayerBar .controls");
 
-        const seconds = audio.currentTime;
-        const duration = audio.duration;
+        const playbackRate = audio.playbackRate ?? 1;
+
+        // Divide by playbackRate so that the times shown are accurate to the modified rate.
+        const seconds = audio.currentTime / playbackRate;
+        const duration = audio.duration / playbackRate;
         const progress = (seconds / duration) * 100;
 
         elapsedTime.textContent = `${Math.floor(seconds/60)}:${("0"+Math.floor(seconds)%60).slice(-2)}`;
@@ -82,8 +91,9 @@ function initAudioFunctions(audio) {
         const songProgress = {
             stashId: currentlyPlaying.stashId,
             song: currentlyPlaying.song,
-            seconds,
-            duration,
+            // Ensure we save raw time & duration values - saving ones changed by playback rate will cause mass confusion among the code (probably).
+            seconds: audio.currentTime,
+            duration: audio.duration,
             progress,
             queue: mainQueue.export()
         };
@@ -133,7 +143,7 @@ function initAudioFunctions(audio) {
         playBtn.innerHTML = `<i class="fa fa-play"></i>`;
         playBtn.setAttribute("data-state", "paused");
 
-        window.electronAPI.updateSongInfo(null);
+        updateSongInfo(audio);
     }
 
     audio.onended = () => {
@@ -378,6 +388,9 @@ async function initAddSongsModal(modal, stash, onSave) {
     modal.show();
 }
 function showImportPage() {
+    deselectAllStashes();
+    changePage("stash");
+
     const display = document.querySelector(".stashDisplay");
 
     display.querySelector(".title").textContent = "Import Songs";
@@ -1242,6 +1255,7 @@ function loadPreviouslySavedSong(audio) {
     loadAudioSavedOptions(audio);
 
     setPlayingSong(savedSong.stashId, savedSong.song);
+    handleAppVersion();
 }
 
 /**
@@ -1259,4 +1273,21 @@ function loadAudioSavedOptions(audio) {
 
 function getSongPath(fileName) {
     return `${USER_DATA_PATH}\\data\\songs\\${fileName}`;
+}
+
+/**
+ * Checks current app version. Updates if necessary, and shows home page if so incase any updates are shown there.
+ */
+async function handleAppVersion() {
+    const version = await window.electronAPI.getAppVersion();
+    const lastViewedVersion = localStorage.getItem("latestVersion");
+
+    // View home page if versions do not match.
+    if (lastViewedVersion !== version) {
+        changePage("main");
+        deselectAllStashes();
+    }
+    
+    // Update version.
+    localStorage.setItem("latestVersion", version);
 }

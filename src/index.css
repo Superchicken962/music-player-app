@@ -266,6 +266,10 @@ hr {
     grid-area: audioControl;
 }
 
+.center-content {
+    text-align: center;
+}
+
 .audioPlayerBar .controls a {
     display: inline-block;
     width: 35px;
@@ -540,4 +544,12 @@ hr {
 }
 .alert:empty {
     display: none;
+}
+
+ul.versionChanges {
+    text-align: left;
+}
+.mainDisplay {
+    padding: 0 2rem;
+    margin-bottom: 100px;
 }
