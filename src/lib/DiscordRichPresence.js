@@ -59,8 +59,14 @@ class MusicRichPresence extends DiscordRichPresence {
      * @param { Boolean? } opts.useArtistForName - Should the song artist be used for the activity name. (i.e. It becomes 'Listening to *artist' rather than 'Listening to MusicStash')
      */
     setPlayingSong(song, opts = {}) {
-        const start = Math.floor(Date.now() / 1000) - Math.floor(song.position);
-        const end = start + Math.floor(song.duration);
+        const playbackRate = song.playbackRate || 1;
+        
+        // Change position & duration according to playback rate.
+        const position = song.position / playbackRate;
+        const duration = song.duration / playbackRate;
+
+        const start = Math.floor(Date.now() / 1000) - Math.floor(position);
+        const end = start + Math.floor(duration);
 
         const buttons = [];
         
@@ -77,7 +83,7 @@ class MusicRichPresence extends DiscordRichPresence {
             startTimestamp: start,
             endTimestamp: end,
             smallImageText: "MusicStash",
-            largeImageText: "Listening on MusicStash",
+            largeImageText: (playbackRate != 1) ? `Listening at ${playbackRate}x speed on MusicStash` : "Listening on MusicStash",
             name: (opts.useArtistForName) ? song.artist : "MusicStash",
             instance: false,
             buttons,

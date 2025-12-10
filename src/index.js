@@ -221,7 +221,7 @@ async function updateSongInfo(e, songInfo) {
         artist: songInfo.artist,
         duration: songInfo.duration,
         position: songInfo.currentTime,
-        playbackRate: 1
+        playbackRate: songInfo.playbackRate
     }, {
         includeGetButton: true,
         useArtistForName: true
