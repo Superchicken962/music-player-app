@@ -72,5 +72,6 @@ ipcMain.handle("server:start", (e, port) => {
 ipcMain.handle("server:stop", serverManager.stopServer);
 ipcMain.handle("server:getLogs", serverManager.getLogs);
 ipcMain.handle("server:clearLogs", serverManager.clearLogs);
+ipcMain.handle("server:getConnections", serverManager.getConnections);
 
 module.exports = serverManager;

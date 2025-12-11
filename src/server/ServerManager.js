@@ -19,7 +19,7 @@ const { Server } = require("socket.io");
  */
 
 /**
- * @typedef { "statusUpdate" | "start" | "stop" | "log" } ServerEvent
+ * @typedef { "statusUpdate" | "start" | "stop" | "log" | "newConnection" } ServerEvent
  */
 
 class ServerManager {
@@ -33,19 +33,32 @@ class ServerManager {
     #socketPort = 3000;
 
     #initSocket() {
-        this.#socket = new Server(this.#socketPort);
+        this.#socket = new Server(this.#socketPort, {
+            cors: {
+                origin: "*",
+                methods: "GET"
+            }
+        });
 
         // TODO: Handle CORS for eventually accessing via web player.
 
+        this.#socket.on("connection", (socket) => {
+            this.#callEvent("newConnection");
+
+            this.log({ date: new Date(), content: `New connection: ${socket.id}` });
+        });
+
+        // Listener for when socket is started.
         this.#socket.httpServer.on("listening", () => {
             this.#callEvent("statusUpdate");
             this.#callEvent("start");
 
-            this.log({ date: new Date(), content: "Server Started" });
+            this.log({ date: new Date(), content: `Server Listening on port ${this.#socketPort}` });
 
             this.#running = true;
         });
 
+        // Listener for when socket is stopped.
         this.#socket.httpServer.on("close", () => {
             this.#callEvent("statusUpdate");
             this.#callEvent("stop");
@@ -73,6 +86,7 @@ class ServerManager {
      * @returns { ServerConnection[] } 
      */
     getConnections = () => {
+        console.log(this.#socket.engine.clientsCount)
         return Object.values(this.#connections);
     }
 
@@ -85,7 +99,6 @@ class ServerManager {
      * Clear server logs.
      */
     clearLogs = () => {
-        console.log(this.#logs);
         this.#logs.length = 0;
     }
 

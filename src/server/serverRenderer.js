@@ -68,3 +68,7 @@ function appendLog(log) {
 window.electronAPI.listenFor("server:statusChange", (ev, info) => {
     updateValues(info);
 });
+
+setInterval(() => {
+    window.electronAPI.getServerConnections().then(console.log);
+}, 4500);
