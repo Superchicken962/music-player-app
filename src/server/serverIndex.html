@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,7 +39,39 @@
 
         <div class="row mt-2">
             <div class="col-md-12">
-                <textarea class="form-control serverLogs bg-dark text-light" style="min-height: 150px;" disabled></textarea>
+                <ul class="nav nav-tabs" id="manageTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active"
+                            id="logs-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#logs-tab-pane"
+                            type="button" 
+                            role="tab"
+                            aria-controls="logs-tab-pane"
+                            aria-selected="true"
+                        >Logs</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link"
+                            id="connections-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#connections-tab-pane"
+                            type="button" 
+                            role="tab"
+                            aria-controls="connections-tab-pane"
+                            aria-selected="true"
+                        >Connections</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="manageTabContent">
+                    <div class="tab-pane show active" id="logs-tab-pane" role="tabpanel" aria-labelledby="logs-tab" tabindex="0">
+                        <textarea id="serverLogs" class="form-control manageServerText bg-dark text-light" style="min-height: 150px;" disabled></textarea>
+                    </div>
+                    <div class="tab-pane" id="connections-tab-pane" role="tabpanel" aria-labelledby="connections-tab" tabindex="0">
+                        <textarea id="serverConnections" class="form-control manageServerText bg-dark text-light" style="min-height: 150px;" disabled></textarea>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

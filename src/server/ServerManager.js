@@ -4,6 +4,8 @@
  * @property { String } content
  */
 
+const { Server } = require("socket.io");
+
 /**
  * @typedef { Object } ServerConnection
  * 
@@ -25,23 +27,44 @@ class ServerManager {
     #connections = {};
     #running = false;
     #listeners = {};
+    
+    /** @type { Server } */
+    #socket;
+    #socketPort = 3000;
 
-    startServer = () => {
-        this.#running = true;
-        
-        this.#callEvent("statusUpdate");
-        this.#callEvent("start");
+    #initSocket() {
+        this.#socket = new Server(this.#socketPort);
 
-        this.log({ date: new Date(), content: "Server Started" });
+        // TODO: Handle CORS for eventually accessing via web player.
+
+        this.#socket.httpServer.on("listening", () => {
+            this.#callEvent("statusUpdate");
+            this.#callEvent("start");
+
+            this.log({ date: new Date(), content: "Server Started" });
+
+            this.#running = true;
+        });
+
+        this.#socket.httpServer.on("close", () => {
+            this.#callEvent("statusUpdate");
+            this.#callEvent("stop");
+
+            this.log({ date: new Date(), content: "Server Stopped" });
+
+            this.#running = false;
+        });
+    }
+
+    startServer = (port) => {
+        if (port) this.#socketPort = port;
+        this.#initSocket();
     }
 
     stopServer = () => {
-        this.#running = false;
+        if (!this.#socket) return;
 
-        this.#callEvent("statusUpdate");
-        this.#callEvent("stop");
-
-        this.log({ date: new Date(), content: "Server Stopped" });
+        this.#socket.close();
     }
 
     /**

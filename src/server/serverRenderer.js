@@ -1,6 +1,6 @@
 let updatedAlready = false;
 
-const logElement = document.querySelector(".serverLogs");
+const logElement = document.querySelector("#serverLogs");
 const portInput = document.querySelector("#serverPort");
 
 portInput.addEventListener("input", (ev) => {
@@ -10,7 +10,9 @@ portInput.addEventListener("input", (ev) => {
 const startBtn = document.querySelector("#serverStartBtn");
 const stopBtn = document.querySelector("#serverStopBtn");
 const clearLogsBtn = document.querySelector("#clearLogsBtn");
-startBtn.addEventListener("click", window.electronAPI.startServer);
+startBtn.addEventListener("click", () => {
+    window.electronAPI.startServer(portInput.value);
+});
 stopBtn.addEventListener("click", window.electronAPI.stopServer);
 clearLogsBtn.addEventListener("click", () => {
     window.electronAPI.clearServerLogs();
@@ -28,9 +30,11 @@ async function updateValues(serverInfo) {
     if (serverInfo.running) {
         stopBtn.removeAttribute("disabled");
         startBtn.setAttribute("disabled", true);
+        portInput.setAttribute("disabled", true);
     } else {
         startBtn.removeAttribute("disabled");
         stopBtn.setAttribute("disabled", true);
+        portInput.removeAttribute("disabled");
     }
 
     // For the first update, show previous logs.

@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on(channel, (event, ...args) => listener(...args));
     },
     getServerInfo: () => ipcRenderer.invoke("server:getInfo"),
-    startServer: () => ipcRenderer.invoke("server:start"),
+    startServer: (port) => ipcRenderer.invoke("server:start", port),
     stopServer: () => ipcRenderer.invoke("server:stop"),
     getServerLogs: () => ipcRenderer.invoke("server:getLogs"),
     clearServerLogs: () => ipcRenderer.invoke("server:clearLogs")

@@ -66,7 +66,9 @@ serverManager.on("statusUpdate", (info) => serverManager.sendMessage("server:sta
 serverManager.on("log", (info, log) => serverManager.sendMessage("server:log", log));
 
 ipcMain.handle("server:getInfo", serverManager.getInfo);
-ipcMain.handle("server:start", serverManager.startServer);
+ipcMain.handle("server:start", (e, port) => {
+    serverManager.startServer(port);
+});
 ipcMain.handle("server:stop", serverManager.stopServer);
 ipcMain.handle("server:getLogs", serverManager.getLogs);
 ipcMain.handle("server:clearLogs", serverManager.clearLogs);
