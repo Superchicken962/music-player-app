@@ -19,7 +19,7 @@ const { Server } = require("socket.io");
  */
 
 /**
- * @typedef { "statusUpdate" | "start" | "stop" | "log" | "newConnection" } ServerEvent
+ * @typedef { "statusUpdate" | "start" | "stop" | "log" | "newConnection" | "connectionDisconnected" } ServerEvent
  */
 
 class ServerManager {
@@ -40,12 +40,20 @@ class ServerManager {
             }
         });
 
-        // TODO: Handle CORS for eventually accessing via web player.
-
         this.#socket.on("connection", (socket) => {
+            // Call connection event and add socket to connections upon new socket connection.
             this.#callEvent("newConnection");
+            this.#addConnection(socket);
 
             this.log({ date: new Date(), content: `New connection: ${socket.id}` });
+
+            // Remove this socket from connections & call event for a socket disconnection.
+            socket.on("disconnect", () => {
+                this.#callEvent("connectionDisconnected");
+                this.#removeConnection(socket);
+
+                this.log({ date: new Date(), content: `Client ${socket.id} disconnected` });
+            });
         });
 
         // Listener for when socket is started.
@@ -69,6 +77,19 @@ class ServerManager {
         });
     }
 
+    #removeConnection(socket) {
+        delete this.#connections[socket.id];
+    }
+    #addConnection(socket) {
+        const now = new Date();
+        
+        // TODO: Perhaps make this a simple class and instantiate here?
+        this.#connections[socket.id] = {
+            id: socket.id,
+            connectedAt: now
+        };
+    }
+
     startServer = (port) => {
         if (port) this.#socketPort = port;
         this.#initSocket();
@@ -86,7 +107,6 @@ class ServerManager {
      * @returns { ServerConnection[] } 
      */
     getConnections = () => {
-        console.log(this.#socket.engine.clientsCount)
         return Object.values(this.#connections);
     }
 
