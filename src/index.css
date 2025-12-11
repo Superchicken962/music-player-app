@@ -553,3 +553,11 @@ ul.versionChanges {
     padding: 0 2rem;
     margin-bottom: 100px;
 }
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.root {
+    animation: fadein 0.5s;
+}

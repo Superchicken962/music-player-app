@@ -110,6 +110,11 @@ app.whenReady().then(() => {
                         click: (i) => {
                             // Update preference when changed.
                             electronStore.set("discordRPC.enabled", i.checked);
+
+                            // If disabling RPC, clear activity from current rpc.
+                            if (!i.checked) {
+                                rpc.clearActivity();
+                            }
                         },
                         checked: electronStore.get("discordRPC.enabled")
                     }

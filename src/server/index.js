@@ -21,7 +21,12 @@ class ServerManagerWindow extends ServerManager {
             webPreferences: {
                 preload: path.join(__dirname, "serverPreload.js"),
             },
-            title: "Server Manager"
+            title: "Server Manager",
+            show: false
+        });
+
+        this.#window.on("ready-to-show", () => {
+            this.#window.show();
         });
 
         this.#window.loadFile(path.join(__dirname, "serverIndex.html"));

@@ -12,7 +12,11 @@ const stopBtn = document.querySelector("#serverStopBtn");
 const clearLogsBtn = document.querySelector("#clearLogsBtn");
 startBtn.addEventListener("click", window.electronAPI.startServer);
 stopBtn.addEventListener("click", window.electronAPI.stopServer);
-clearLogsBtn.addEventListener("click", window.electronAPI.clearServerLogs);
+clearLogsBtn.addEventListener("click", () => {
+    window.electronAPI.clearServerLogs();
+    logElement.textContent = "";
+    updateValues();
+});
 
 async function updateValues(serverInfo) {
     portInput.value = (localStorage.getItem("serverPort") ?? 3000);
@@ -32,7 +36,14 @@ async function updateValues(serverInfo) {
     // For the first update, show previous logs.
     if (!updatedAlready) {
         const logs = await window.electronAPI.getServerLogs();
-        console.log(logs);
+        logs.forEach(appendLog);
+    }
+
+    // Disable clear log button if there are no logs.
+    if (logElement.value.length > 0) {
+        clearLogsBtn.removeAttribute("disabled");
+    } else {
+        clearLogsBtn.setAttribute("disabled", true);
     }
 
     updatedAlready = true;
@@ -40,12 +51,15 @@ async function updateValues(serverInfo) {
 updateValues();
 
 // Handle showing logs from server.
-window.electronAPI.listenFor("server:log", (log) => {
-    logElement.textContent += `[${log.date.toLocaleTimeString()}] ${log.content}\n`;
+window.electronAPI.listenFor("server:log", appendLog);
+
+function appendLog(log) {
+    const date = new Date(log.date);
+    logElement.textContent += `[${date.toLocaleTimeString()}] ${log.content}\n`;
     
     // Auto scroll to bottom on new log.
     logElement.scrollTop = logElement.scrollHeight;
-});
+}
 
 window.electronAPI.listenFor("server:statusChange", (ev, info) => {
     updateValues(info);
