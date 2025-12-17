@@ -1,9 +1,10 @@
 class Stash {
-    constructor(id, name, description) {
+    constructor(id, name, description, isPrivate) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.songs = [];
+        this.private = isPrivate || false;
     }
 
     /**

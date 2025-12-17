@@ -43,6 +43,7 @@ class ServerManager {
         });
         
         this.#initDefaultSocketEvents();
+        this.initSocketEvents();
 
         this.#socket.on("connection", (socket) => {
             // Call connection event and add socket to connections upon new socket connection.
@@ -217,10 +218,15 @@ class ServerManager {
     }
 
     #initDefaultSocketEvents() {
-        this.addSocketListener("getStashes", (data, reply) => {
-            reply([]);
+        this.addSocketListener("ping", (data, reply) => {
+            reply("pong");
         });
     }
+
+    /**
+     * Function that is called upon socket start, with the intention of initialising socket event listeners.
+     */
+    initSocketEvents() {}
 }
 
 class SocketConnection {

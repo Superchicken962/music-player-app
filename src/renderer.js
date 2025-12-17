@@ -9,6 +9,8 @@ async function updateStashList() {
     listEl.innerHTML = "";
 
     for (const stash of stashes) {
+        console.log(stash);
+        
         const el = document.createElement("div");
         el.className = "stash";
         el.id = `stash${stash.id}`;
@@ -17,7 +19,7 @@ async function updateStashList() {
         el.innerHTML = `
             <h3>${stash.name ?? "Unknown"}</h3>
             <!-- <p>17 Songs • 1h 39m</p> -->
-            <p>${stash.songs?.length ?? 0} Song${stash.songs?.length === 1 ? "" : "s"} • N/A</p>
+            <p>${stash.songs?.length ?? 0} Song${stash.songs?.length === 1 ? "" : "s"}</p>
         `;
 
         el.addEventListener("click", () => {

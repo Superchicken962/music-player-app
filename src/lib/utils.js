@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const ffmpeg = require("fluent-ffmpeg");
 const { Innertube, UniversalCache, Utils, ClientType } = require("youtubei.js");
+const { app } = require("electron");
 
 /**
  * Create/get innertube instance - with cache.
@@ -213,6 +214,53 @@ function capitaliseWord(word) {
     return word.charAt(0).toUpperCase() + word.toLowerCase().slice(1);
 }
 
+function getUserDataPath() {
+    // If app is packaged (production), use user data folder in appdata. Otherwise (if development), use project directory.
+    return (app.isPackaged) ? app.getPath("userData") : path.join(__dirname, "../../");
+}
+
+/**
+ * Get all stashes, including the master stash.
+ * 
+ * @returns { Promise<Object[]> }
+ */
+async function getStashes() {
+    const stashes = await readAndParseJson(path.join(getUserDataPath(), "data/stashes.json"), []);
+    const songs = await readAndParseJson(path.join(getUserDataPath(), "data/songs.json"), {});
+
+    // Add "master" stash to start.
+    stashes.unshift({
+        id: 0,
+        name: "Master Stash",
+        description: "The main stash in which all of your downloaded and imported songs will be stored!",
+        songs: Object.keys(songs),
+        isMain: true
+    });
+
+    return stashes;
+}
+
+/**
+ * Get all songs.
+ * 
+ * @returns { Promise<Object[]> }
+ */
+async function getSongs() {
+    const songs = await readAndParseJson(path.join(getUserDataPath(), "data/songs.json"), {});
+    return songs;
+}
+
+/**
+ * Get all public stashes - excludes the master stash.
+ * 
+ * @returns { Promise<Object[]> }
+ */
+async function getPublicStashes() {
+    const stashes = await getStashes();
+
+    return stashes.filter(s => !s.isMain && !s.private);
+}
+
 module.exports = {
     readAndParseJson,
     createRequiredFolders,
@@ -220,5 +268,9 @@ module.exports = {
     downloadYoutubeVideo,
     audioTimeUpdate,
     generateRandomTimestampId,
-    capitaliseWord
+    capitaliseWord,
+    getUserDataPath,
+    getStashes,
+    getSongs,
+    getPublicStashes
 };

@@ -3,7 +3,7 @@ updateElectronApp();
 
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('node:path');
-const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate, generateRandomTimestampId } = require('./lib/utils');
+const { readAndParseJson, createRequiredFolders, downloadYoutubeVideo, getYoutubeVideoInfo, audioTimeUpdate, generateRandomTimestampId, getSongs, getStashes, getUserDataPath } = require('./lib/utils');
 const fs = require("node:fs");
 const serverManager = require('./server');
 const { MusicRichPresence } = require('./lib/DiscordRichPresence');
@@ -142,37 +142,6 @@ app.on('window-all-closed', () => {
 });
 
 createRequiredFolders(getUserDataPath(), ["data/songs", "data/songs.json", "data/stashes.json", "data/lyrics.json"]);
-
-/**
- * Get all stashes, including the master stash.
- * 
- * @returns { Object[] }
- */
-async function getStashes() {
-    const stashes = await readAndParseJson(path.join(getUserDataPath(), "data/stashes.json"), []);
-    const songs = await readAndParseJson(path.join(getUserDataPath(), "data/songs.json"), {});
-
-    // Add "master" stash to start.
-    stashes.unshift({
-        id: 0,
-        name: "Master Stash",
-        description: "The main stash in which all of your downloaded and imported songs will be stored!",
-        songs: Object.keys(songs),
-        isMain: true
-    });
-
-    return stashes;
-}
-
-/**
- * Get all songs.
- * 
- * @returns { Promise<Object[]> }
- */
-async function getSongs() {
-    const songs = await readAndParseJson(path.join(getUserDataPath(), "data/songs.json"), {});
-    return songs;
-}
 
 async function newStash(e, stash) {
     const stashes = await readAndParseJson(path.join(getUserDataPath(), "data/stashes.json"), []);
@@ -325,9 +294,4 @@ async function importLocalSong(e, buffer) {
 
     await fs.promises.writeFile(pth, Buffer.from(buffer));
     return { path: pth, id: fileName };
-}
-
-function getUserDataPath() {
-    // If app is packaged (production), use user data folder in appdata. Otherwise (if development), use project directory.
-    return (app.isPackaged) ? app.getPath("userData") : path.join(__dirname, "../");
 }

@@ -1,6 +1,7 @@
 const { BrowserWindow, ipcMain } = require("electron");
 const path = require('node:path');
 const ServerManager = require("./ServerManager");
+const { getPublicStashes } = require("../lib/utils");
 
 class ServerManagerWindow extends ServerManager {
     /** @type { BrowserWindow } */
@@ -57,6 +58,14 @@ class ServerManagerWindow extends ServerManager {
         if (!this.#window) return;
 
         this.#window.webContents.send(event, ...args);
+    }
+
+    initSocketEvents() {
+        this.addSocketListener("getStashes", async(data, reply) => {
+            const stashes = await getPublicStashes();
+
+            reply(stashes);
+        });
     }
 }
 
