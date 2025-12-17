@@ -1,7 +1,7 @@
 const { BrowserWindow, ipcMain } = require("electron");
 const path = require('node:path');
 const ServerManager = require("./ServerManager");
-const { getPublicStashes } = require("../lib/utils");
+const { getPublicStashes, getSongs, getSongsForStashes } = require("../lib/utils");
 
 class ServerManagerWindow extends ServerManager {
     /** @type { BrowserWindow } */
@@ -62,7 +62,8 @@ class ServerManagerWindow extends ServerManager {
 
     initSocketEvents() {
         this.addSocketListener("getStashes", async(data, reply) => {
-            const stashes = await getPublicStashes();
+            const publicStashes = await getPublicStashes();
+            const stashes = await getSongsForStashes(publicStashes);
 
             reply(stashes);
         });

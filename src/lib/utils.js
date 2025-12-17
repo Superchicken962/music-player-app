@@ -261,6 +261,32 @@ async function getPublicStashes() {
     return stashes.filter(s => !s.isMain && !s.private);
 }
 
+/**
+ * Replaces the song ids in stashes with the song objects.
+ * 
+ * @param { Object[] } stashes 
+ */
+async function getSongsForStashes(stashes) {
+    const songs = await getSongs();
+
+    stashes = stashes.map(stash => {
+        // Map each song to the song object. Filter afterwards to ensure any songs not found are removed completely.
+        stash.songs = stash.songs.map(s => {
+            const song = songs[s];
+            if (!song) return null;
+            
+            // Delete the file name as we don't need this to be passed on.
+            delete song.fileName;
+
+            return song;
+        }).filter(s => s);
+        
+        return stash;
+    });
+
+    return stashes
+}
+
 module.exports = {
     readAndParseJson,
     createRequiredFolders,
@@ -272,5 +298,6 @@ module.exports = {
     getUserDataPath,
     getStashes,
     getSongs,
-    getPublicStashes
+    getPublicStashes,
+    getSongsForStashes
 };
