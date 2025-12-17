@@ -36,6 +36,8 @@ class DiscordRichPresence {
     }
 
     clearActivity() {
+        if (!this.isReady()) return;
+
         this.#rpc.user.clearActivity();
     }
 }

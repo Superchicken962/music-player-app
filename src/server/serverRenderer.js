@@ -65,10 +65,15 @@ function appendLog(log) {
     logElement.scrollTop = logElement.scrollHeight;
 }
 
-window.electronAPI.listenFor("server:statusChange", (ev, info) => {
+window.electronAPI.listenFor("server:statusChange", (info) => {
     updateValues(info);
 });
 
-setInterval(() => {
-    window.electronAPI.getServerConnections().then(console.log);
-}, 4500);
+function showConnections(connections) {
+    console.log("conns", connections);
+}
+
+window.electronAPI.listenFor("server:newConnection", (conn) => {
+    showConnections(conn);
+});
+window.electronAPI.getServerConnections().then(showConnections);

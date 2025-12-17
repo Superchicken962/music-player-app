@@ -64,6 +64,7 @@ const serverManager = new ServerManagerWindow();
 
 serverManager.on("statusUpdate", (info) => serverManager.sendMessage("server:statusChange", info));
 serverManager.on("log", (info, log) => serverManager.sendMessage("server:log", log));
+serverManager.on("newConnection", (info, conn) => serverManager.sendMessage("server:newConnection", conn));
 
 ipcMain.handle("server:getInfo", serverManager.getInfo);
 ipcMain.handle("server:start", (e, port) => {
